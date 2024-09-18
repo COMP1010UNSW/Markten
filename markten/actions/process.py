@@ -6,10 +6,14 @@ Actions for running subprocesses
 import asyncio
 import signal
 from logging import Logger
+from typing import Callable, Coroutine, Any
 from .__action import MarkTenAction
 
 
 log = Logger(__name__)
+
+
+CleanupHook = Callable[[], Coroutine[Any, Any, Any]]
 
 
 class run(MarkTenAction):
@@ -20,6 +24,10 @@ class run(MarkTenAction):
 
     def __init__(self, *args: str) -> None:
         self.args = args
+        self.cleanup_hooks: list[CleanupHook] = []
+
+    def register_cleanup_hook(self, fn: CleanupHook):
+        self.cleanup_hooks.append(fn)
 
     async def run(self, spinners) -> None:
         task = spinners.create_task(self, self.args[0])
@@ -44,8 +52,10 @@ class run(MarkTenAction):
         task.succeed()
 
     async def cleanup(self) -> None:
-        # Nothing to do, task has already exited
-        return
+        # Call cleanup hooks
+        tasks = []
+        for hook in self.cleanup_hooks:
+            tasks.append(asyncio.create_task(hook()))
 
 
 class run_parallel(MarkTenAction):
