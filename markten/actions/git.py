@@ -21,9 +21,7 @@ class clone(MarkTenAction):
         self.repo = repo_url
         self.branch = branch
 
-        self.clone_path: Path | None = None
-
-    async def begin(self) -> None:
+    async def run(self) -> Path:
         # Make a temporary directory
         mktemp = await asyncio.create_subprocess_exec(
             "mktemp",
@@ -42,7 +40,7 @@ class clone(MarkTenAction):
             ]))
             raise RuntimeError("git clone action: mktemp failed")
 
-        self.clone_path = Path(stdout.decode().strip())
+        clone_path = Path(stdout.decode().strip())
 
         # Perform the git clone
         if self.branch:
@@ -55,7 +53,7 @@ class clone(MarkTenAction):
             "clone",
             *branch_args,
             self.repo,
-            self.clone_path,
+            clone_path,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
@@ -70,11 +68,9 @@ class clone(MarkTenAction):
             ]))
             raise RuntimeError("git clone action: clone failed")
 
-    async def get_parameter(self) -> Path:
-        assert self.clone_path is not None
-        return self.clone_path
+        return clone_path
 
-    async def end(self) -> None:
+    async def cleanup(self) -> None:
         # Temporary directory will be automatically cleaned up by the OS, so
         # there is no need for us to do anything
         return

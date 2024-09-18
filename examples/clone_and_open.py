@@ -1,7 +1,6 @@
 """
 Clone and open a bunch of students' work by reading student IDs from stdin.
 """
-import sys
 from argparse import ArgumentParser
 from markten import MarkTen, generators, actions
 from pathlib import Path
@@ -37,7 +36,7 @@ def open_code(directory: Path):
 
 def print_student_info(zid: str):
     """Look up student info"""
-    return actions.process.run("ssh", "cse", "acc", zid)
+    return actions.process.run_parallel("ssh", "cse", "acc", zid)
 
 
 marker = MarkTen(

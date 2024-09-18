@@ -3,60 +3,212 @@
 
 Contains the definition for the main MarkTen class.
 """
-import itertools
+import asyncio
+import inspect
 from .actions import MarkTenAction
 from typing import Union, Callable, Any
 from collections.abc import Sequence, Mapping, Iterable
+from .__iterator import generator_iterator
 
 
-GeneratorOption = Mapping[str, Iterable[Any]]
-
-
-ActionFunction = Callable[
-    ...,
-    Union[
-        MarkTenAction,
-        tuple[MarkTenAction, ...],
-        Mapping[str, MarkTenAction],
-    ]
-]
+ParameterPermutations = Mapping[str, Iterable[Any]]
 """
-An `ActionFunction` is a function that may accept parameters of previous
-actions or of the generators, and returns a MarkTenAction, or a collection
-thereof.
-
-If the collection is in the form of a dictionary, the action's parameter will
-be made available to following action functions, with the property name being
-the same as the key in the dictionary.
+Mapping containing iterables for all permutations of the available params.
 """
 
-
-ActionGroup = Union[
+GeneratedActions = Union[
     MarkTenAction,
-    ActionFunction,
-    tuple[ActionFunction | MarkTenAction, ...]
+    tuple[MarkTenAction, ...],
+    Mapping[str, MarkTenAction],
 ]
 """
-An `ActionGroup` is a collection of `ActionFunction`s which should be executed
-in sequence.
+`GeneratedActions` is a collection of actions run in parallel as a part of a
+step in the marking recipe.
+
+This can be one of:
+
+* `MarkTenAction`: a single anonymous action, whose result is discarded.
+* `tuple[MarkTenAction, ...]`: a collection of anonymous actions.
+* `Mapping[str, MarkTenAction]`: a collection of named actions, whose results
+  are stored as parameters under the given names.
+"""
+
+ActionGenerator = Callable[..., 'ActionStep']
+"""
+An `ActionGenerator` is a function that may accept any current parameters, and
+must return an `ActionStep`, which is expanded recursively.
+"""
+
+
+ActionStepItem = Union[
+    ActionGenerator,
+    GeneratedActions,
+]
+"""
+Each item in a step must either be a function that generates actions, or
+pre-generated actions.
+"""
+
+
+ActionStep = Union[
+    ActionStepItem,
+    tuple[ActionStepItem, ...]
+]
+"""
+An `ActionStep` is a collection of items that should be executed in parallel.
+"""
+
+GeneratedActionStep = tuple[
+    dict[str, MarkTenAction],
+    list[MarkTenAction]
+]
+"""
+An `ActionStep` after running any action generators.
+
+This is used internally when running the actions.
+
+A tuple of:
+
+* `dict[str, MarkTenAction]`: named actions
+* `list[MarkTenAction]`: anonymous actions
 """
 
 
 class MarkTen:
     def __init__(
         self,
-        generators: GeneratorOption | Sequence[GeneratorOption],
-        actions: Sequence[ActionGroup],
+        generators: ParameterPermutations | Sequence[ParameterPermutations],
+        recipe: Sequence[ActionStep],
     ) -> None:
         if isinstance(generators, Mapping):
-            self.generators = generators
+            self.generators: ParameterPermutations = generators
         else:
             self.generators = {}
             for generator in generators:
                 self.generators |= generator
-        self.actions = actions
+        self.recipe = recipe
 
     def run(self):
-        # itertools.product
-        # Need the equivalent for a dict of sequences
-        ...
+        """
+        Run the marking recipe for each combination given by the generators.
+        """
+        asyncio.run(self.__do_run())
+
+    async def __do_run(self):
+        """Async implementation of running the marking recipe"""
+        for params in generator_iterator(self.generators):
+            # Begin marking with the given parameters
+            show_current_params(params)
+            await self.__run_recipe(params)
+
+    async def __run_recipe(self, params: Mapping[str, Any]):
+        """Execute the marking recipe using the given params"""
+        params = dict(params)
+
+        actions_by_step: list[GeneratedActionStep] = []
+        """
+        Actions ordered by step, used to ensure that we can run any required
+        teardown at the end of the recipe.
+        """
+        for step in self.recipe:
+            # Convert the step into a list of actions to be run in parallel
+            actions_to_run = generate_actions_for_step(step, params)
+            actions_by_step.append(actions_to_run)
+
+            # Run all tasks
+            named_tasks: dict[str, asyncio.Task[Any]] = {}
+            anonymous_tasks: list[asyncio.Task[Any]] = []
+            # Named tasks
+            for key, action in actions_to_run[0].items():
+                named_tasks[key] = asyncio.create_task(action.run())
+            # Anonymous tasks
+            for action in actions_to_run[1]:
+                anonymous_tasks.append(asyncio.create_task(action.run()))
+            # Now wait for them all to resolve
+            results: dict[str, Any] = {}
+            for key, task in named_tasks.items():
+                results[key] = await task
+            for task in anonymous_tasks:
+                await task
+
+            # Now merge the results with the params
+            params |= results
+
+        # Now perform the teardown
+        for named_actions, anonymous_actions in reversed(actions_by_step):
+            for action in named_actions.values():
+                await action.cleanup()
+            for action in anonymous_actions:
+                await action.cleanup()
+
+
+def show_current_params(params: Mapping[str, Any]):
+    """
+    Displays the current params to the user.
+    """
+    print()
+    print("Running recipe with given parameters:")
+    for param_name, param_value in params.items():
+        print(f"  {param_name} = {param_value}")
+    print()
+
+
+def generate_actions_for_step(
+    step: ActionStep,
+    params: Mapping[str, Any],
+) -> GeneratedActionStep:
+    """
+    Given a step, generate the actions
+    """
+    if isinstance(step, tuple):
+        result = ({}, [])
+        for step_item in step:
+            # Use recursion so that we can simplify the handling of multiple
+            # steps
+            result = union_generated_action_step_items(
+                result,
+                generate_actions_for_step(step_item, params)
+            )
+        return result
+    elif isinstance(step, MarkTenAction):
+        # Single anonymous action
+        return ({}, [step])
+    elif isinstance(step, Mapping):
+        # Collection of named actions
+        return (dict(step), [])
+    else:
+        # step is an ActionGenerator function
+        result = execute_action_function(step, params)
+        # Parse the result recursively
+        return generate_actions_for_step(result, params)
+
+
+def union_generated_action_step_items(
+    a: GeneratedActionStep,
+    b: GeneratedActionStep,
+) -> GeneratedActionStep:
+    """
+    Union a and b.
+    """
+    named_actions = a[0] | b[0]
+    anonymous_actions = a[1] + b[1]
+    return named_actions, anonymous_actions
+
+
+def execute_action_function(
+    fn: ActionGenerator,
+    params: Mapping[str, Any],
+) -> ActionStep:
+    """
+    Execute an action generator function, ensuring only the desired parameters
+    are passed as kwargs.
+    """
+    args = inspect.getfullargspec(fn)
+    kwargs_used = args[2] is not None
+    if kwargs_used:
+        return fn(**params)
+    else:
+        # Only pass the args used
+        named_args = args[0]
+        param_subset = {k: v for k, v in params.items() if k in named_args}
+        return fn(**param_subset)

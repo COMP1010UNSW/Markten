@@ -3,41 +3,34 @@
 
 Base class for MarkTen actions.
 """
-from typing import Protocol, Any
+from typing import Protocol, Any, runtime_checkable
 from abc import abstractmethod
 
 
+@runtime_checkable
 class MarkTenAction(Protocol):
     """
     An action object, which executes the given action
     """
     @abstractmethod
-    async def begin(self) -> None:
+    async def run(self) -> Any:
         """
-        Begin the action.
+        Run the action.
 
         This should perform setup for the action. Its resultant awaitable
         should resolve once the setup is complete.
+
+        The awaited result may be used as a parameter for future steps. For
+        example, the `git.clone` action gives the path to the temporary
+        directory cloned.
         """
         raise NotImplementedError
 
-    async def get_parameter(self) -> Any:
-        """
-        Returns the parameter produced by the action, which may be used by
-        future actions.
-
-        For example the `git.clone` action produces a `Path` to the temporary
-        directory in which the repo was cloned.
-
-        Returns:
-            Any: resultant parameter.
-        """
-        return None
-
     @abstractmethod
-    async def end(self) -> None:
+    async def cleanup(self) -> None:
         """
-        Finish the action, performing any required teardown.
+        Clean up after the recipe has been run, performing any required
+        teardown.
 
         The resultant awaitable should resolve once the teardown is complete.
         """
