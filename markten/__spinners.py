@@ -6,7 +6,6 @@ Class for displaying multiple parallel spinners.
 from enum import Enum
 import asyncio
 import term
-import itertools
 
 
 SPIN_FRAMES = "|/-\\"

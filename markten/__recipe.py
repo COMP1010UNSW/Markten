@@ -1,5 +1,5 @@
 """
-# MarkTen / __markten.py
+# MarkTen / Recipe
 
 Contains the definition for the main MarkTen class.
 """
@@ -7,7 +7,7 @@ import asyncio
 import inspect
 from .actions import MarkTenAction
 from typing import Union, Callable, Any
-from collections.abc import Sequence, Mapping, Iterable
+from collections.abc import Mapping, Iterable
 from .__iterator import generator_iterator
 from . import __consts as consts
 from .__spinners import SpinnerManager
