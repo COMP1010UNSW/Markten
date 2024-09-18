@@ -1,6 +1,6 @@
 def stdin(param_name: str):
     """
-    Get generators as lines from stdin.
+    Get parameter values as lines from stdin.
     """
     try:
         while True:

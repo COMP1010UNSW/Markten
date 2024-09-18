@@ -189,7 +189,7 @@ def generate_actions_for_step(
     Given a step, generate the actions
     """
     if isinstance(step, tuple):
-        result = ({}, [])
+        result: GeneratedActionStep = ({}, [])
         for step_item in step:
             # Use recursion so that we can simplify the handling of multiple
             # steps
@@ -206,9 +206,9 @@ def generate_actions_for_step(
         return (dict(step), [])
     else:
         # step is an ActionGenerator function
-        result = execute_action_function(step, params)
+        action_fn_output = execute_action_function(step, params)
         # Parse the result recursively
-        return generate_actions_for_step(result, params)
+        return generate_actions_for_step(action_fn_output, params)
 
 
 def union_generated_action_step_items(

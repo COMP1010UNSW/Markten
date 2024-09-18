@@ -2,7 +2,7 @@
 Clone and open a bunch of students' work by reading student IDs from stdin.
 """
 from argparse import ArgumentParser
-from markten import Recipe, generators, actions
+from markten import Recipe, parameters, actions
 from pathlib import Path
 
 
@@ -14,7 +14,7 @@ def command_line():
     parser = ArgumentParser("clone_and_open.py")
     parser.add_argument("lab", nargs="+")
 
-    return generators.from_object(parser.parse_args(), ["lab"])
+    return parameters.from_object(parser.parse_args(), ["lab"])
 
 
 def setup(lab: str, zid: str):
@@ -41,7 +41,7 @@ def print_student_info(zid: str):
 
 marker = Recipe("COMP2511 Lab Marking")
 
-marker.parameter("zid", generators.stdin("zid"))
+marker.parameter("zid", parameters.stdin("zid"))
 marker.parameters(command_line())
 
 marker.step("setup repo", setup)

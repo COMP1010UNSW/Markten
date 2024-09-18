@@ -4,12 +4,12 @@
 A manual marking automation framework.
 """
 from .__recipe import Recipe
-from . import generators
+from . import parameters
 from . import actions
 
 
 __all__ = [
     'Recipe',
-    'generators',
+    'parameters',
     'actions',
 ]
