@@ -2,7 +2,7 @@
 Clone and open a bunch of students' work by reading student IDs from stdin.
 """
 from argparse import ArgumentParser
-from markten import MarkTen, generators, actions
+from markten import Recipe, generators, actions
 from pathlib import Path
 
 
@@ -39,19 +39,12 @@ def print_student_info(zid: str):
     return actions.process.run_parallel("ssh", "cse", "acc", zid)
 
 
-marker = MarkTen(
-    # Generators
-    [
-        command_line(),
-        {
-            "zid": generators.stdin("zid"),
-        },
-    ],
-    # Actions
-    [
-        setup,
-        (open_code, print_student_info),
-    ]
-)
+marker = Recipe("COMP2511 Lab Marking")
+
+marker.parameter("zid", generators.stdin("zid"))
+marker.parameters(command_line())
+
+marker.step("setup repo", setup)
+marker.step("view code", (open_code, print_student_info))
 
 marker.run()

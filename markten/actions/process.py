@@ -21,25 +21,27 @@ class run(MarkTenAction):
     def __init__(self, *args: str) -> None:
         self.args = args
 
-        self.process: asyncio.subprocess.Process | None = None
-
-    async def run(self) -> None:
-        self.process = await asyncio.create_subprocess_exec(
+    async def run(self, spinners) -> None:
+        task = spinners.create_task(self, self.args[0])
+        task.running()
+        process = await asyncio.create_subprocess_exec(
             *self.args,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        stdout, stderr = await self.process.communicate()
-        if self.process.returncode:
+        stdout, stderr = await process.communicate()
+        if process.returncode:
+            task.fail(f"Process exited with code {process.returncode}")
             log.error("\n".join([
                 f"Subprocess {self.args[0]} exited with error code: {
-                    self.process.returncode}",
+                    process.returncode}",
                 "stdout:",
                 stdout.decode(),
                 "stderr:",
                 stderr.decode(),
             ]))
             raise RuntimeError("process.run: action failed")
+        task.succeed()
 
     async def cleanup(self) -> None:
         # Nothing to do, task has already exited
@@ -58,12 +60,14 @@ class run_parallel(MarkTenAction):
 
         self.process: asyncio.subprocess.Process | None = None
 
-    async def run(self) -> None:
+    async def run(self, spinners) -> None:
+        task = spinners.create_task(self, self.args[0])
         self.process = await asyncio.create_subprocess_exec(
             *self.args,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
+        task.succeed()
 
     async def cleanup(self) -> None:
         assert self.process is not None

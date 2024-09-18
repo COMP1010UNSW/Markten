@@ -6,6 +6,7 @@ Actions associated with `git` and Git repos.
 import asyncio
 from logging import Logger
 from pathlib import Path
+
 from .__action import MarkTenAction
 
 
@@ -21,8 +22,12 @@ class clone(MarkTenAction):
         self.repo = repo_url
         self.branch = branch
 
-    async def run(self) -> Path:
+    async def run(self, spinners) -> Path:
         # Make a temporary directory
+        task = spinners.create_task(self, "git clone")
+
+        task.message("Creating temporary directory")
+
         mktemp = await asyncio.create_subprocess_exec(
             "mktemp",
             "--directory",
@@ -31,16 +36,11 @@ class clone(MarkTenAction):
         )
         stdout, stderr = await mktemp.communicate()
         if mktemp.returncode:
-            log.error("\n".join([
-                f"mktemp exited with error code: {mktemp.returncode}",
-                "stdout:",
-                stdout.decode(),
-                "stderr:",
-                stderr.decode(),
-            ]))
-            raise RuntimeError("git clone action: mktemp failed")
+            task.fail("mktemp failed")
+            raise RuntimeError("mktemp failed")
 
         clone_path = Path(stdout.decode().strip())
+        task.running("Cloning repository")
 
         # Perform the git clone
         if self.branch:
@@ -59,15 +59,9 @@ class clone(MarkTenAction):
         )
         stdout, stderr = await clone.communicate()
         if clone.returncode:
-            log.error("\n".join([
-                f"git clone exited with error code: {clone.returncode}",
-                "stdout:",
-                stdout.decode(),
-                "stderr:",
-                stderr.decode(),
-            ]))
-            raise RuntimeError("git clone action: clone failed")
+            task.fail(f"git clone exited with error code: {clone.returncode}")
 
+        task.succeed(f"Cloned to {clone_path}")
         return clone_path
 
     async def cleanup(self) -> None:

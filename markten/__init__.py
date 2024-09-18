@@ -3,13 +3,13 @@
 
 A manual marking automation framework.
 """
-from .__markten import MarkTen
+from .__recipe import Recipe
 from . import generators
 from . import actions
 
 
 __all__ = [
-    'MarkTen',
+    'Recipe',
     'generators',
     'actions',
 ]

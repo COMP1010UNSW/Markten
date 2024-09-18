@@ -9,6 +9,8 @@ from .actions import MarkTenAction
 from typing import Union, Callable, Any
 from collections.abc import Sequence, Mapping, Iterable
 from .__iterator import generator_iterator
+from . import __consts as consts
+from .__spinners import SpinnerManager
 
 
 ParameterPermutations = Mapping[str, Iterable[Any]]
@@ -74,19 +76,32 @@ A tuple of:
 """
 
 
-class MarkTen:
+class Recipe:
     def __init__(
         self,
-        generators: ParameterPermutations | Sequence[ParameterPermutations],
-        recipe: Sequence[ActionStep],
+        recipe_name: str,
     ) -> None:
-        if isinstance(generators, Mapping):
-            self.generators: ParameterPermutations = generators
-        else:
-            self.generators = {}
-            for generator in generators:
-                self.generators |= generator
-        self.recipe = recipe
+        self.__name = recipe_name
+        self.__params: dict[str, Any] = {}
+        self.__steps: list[tuple[str, ActionStep]] = []
+
+    def parameter(self, name: str, values: Iterable[str]) -> None:
+        """
+        Add a single parameter to the recipe.
+        """
+        self.__params[name] = values
+
+    def parameters(self, parameters: ParameterPermutations) -> None:
+        """
+        Add a collection of parameters for the recipe.
+        """
+        self.__params |= dict(parameters)
+
+    def step(self, name: str, step: ActionStep) -> None:
+        """
+        Add a step to the recipe
+        """
+        self.__steps.append((name, step))
 
     def run(self):
         """
@@ -96,10 +111,15 @@ class MarkTen:
 
     async def __do_run(self):
         """Async implementation of running the marking recipe"""
-        for params in generator_iterator(self.generators):
+        print(f"== MarkTen | v{consts.VERSION} ==")
+        print(f"Running recipe '{self.__name}'")
+        for params in generator_iterator(self.__params):
             # Begin marking with the given parameters
             show_current_params(params)
             await self.__run_recipe(params)
+            print("Recipe ran successfully.")
+
+        print("Recipe ran successfully for all inputs")
 
     async def __run_recipe(self, params: Mapping[str, Any]):
         """Execute the marking recipe using the given params"""
@@ -110,26 +130,34 @@ class MarkTen:
         Actions ordered by step, used to ensure that we can run any required
         teardown at the end of the recipe.
         """
-        for step in self.recipe:
+        for i, (name, step) in enumerate(self.__steps):
             # Convert the step into a list of actions to be run in parallel
             actions_to_run = generate_actions_for_step(step, params)
             actions_by_step.append(actions_to_run)
+
+            spinners = SpinnerManager(f"{i + 1}. {name}")
 
             # Run all tasks
             named_tasks: dict[str, asyncio.Task[Any]] = {}
             anonymous_tasks: list[asyncio.Task[Any]] = []
             # Named tasks
             for key, action in actions_to_run[0].items():
-                named_tasks[key] = asyncio.create_task(action.run())
+                named_tasks[key] = asyncio.create_task(action.run(spinners))
             # Anonymous tasks
             for action in actions_to_run[1]:
-                anonymous_tasks.append(asyncio.create_task(action.run()))
+                anonymous_tasks.append(
+                    asyncio.create_task(action.run(spinners)))
+            # Start drawing the spinners
+            spinner_task = asyncio.create_task(spinners.spin())
             # Now wait for them all to resolve
             results: dict[str, Any] = {}
             for key, task in named_tasks.items():
                 results[key] = await task
             for task in anonymous_tasks:
                 await task
+
+            # Cancel the spinner task
+            spinner_task.cancel()
 
             # Now merge the results with the params
             params |= results
