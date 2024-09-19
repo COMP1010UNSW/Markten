@@ -74,18 +74,15 @@ class SpinnerManager:
         """Name of spinner"""
         self.__task_list: list[SpinnerTask] = []
         """List of tasks, as they appear while rendering"""
-        self.__task_mapping: dict[int, SpinnerTask] = {}
-        """Mapping of tasks, so that we can update them given an object"""
         # Save the cursor position
         term.saveCursor()
 
-    def create_task(self, owner: object, name: str) -> SpinnerTask:
+    def create_task(self, name: str) -> SpinnerTask:
         """
         Create a task to be displayed by the spinner
         """
         task = SpinnerTask(self, name)
         self.__task_list.append(task)
-        self.__task_mapping[id(owner)] = task
         self.__frame = 0
         return task
 

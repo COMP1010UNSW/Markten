@@ -6,7 +6,7 @@ Base class for MarkTen actions.
 from typing import Protocol, Any, runtime_checkable
 from abc import abstractmethod
 
-from markten.__spinners import SpinnerManager
+from markten.__spinners import SpinnerTask
 
 
 @runtime_checkable
@@ -15,7 +15,13 @@ class MarkTenAction(Protocol):
     An action object, which executes the given action
     """
     @abstractmethod
-    async def run(self, spinners: SpinnerManager) -> Any:
+    def get_name(self) -> str:
+        """
+        Returns the name to use for the action.
+        """
+
+    @abstractmethod
+    async def run(self, task: SpinnerTask) -> Any:
         """
         Run the action.
 

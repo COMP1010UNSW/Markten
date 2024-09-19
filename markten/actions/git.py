@@ -22,10 +22,11 @@ class clone(MarkTenAction):
         self.repo = repo_url
         self.branch = branch
 
-    async def run(self, spinners) -> Path:
-        # Make a temporary directory
-        task = spinners.create_task(self, "git clone")
+    def get_name(self) -> str:
+        return "git clone"
 
+    async def run(self, task) -> Path:
+        # Make a temporary directory
         task.message("Creating temporary directory")
 
         mktemp = await asyncio.create_subprocess_exec(

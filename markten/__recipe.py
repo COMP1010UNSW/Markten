@@ -142,11 +142,12 @@ class Recipe:
             anonymous_tasks: list[asyncio.Task[Any]] = []
             # Named tasks
             for key, action in actions_to_run[0].items():
-                named_tasks[key] = asyncio.create_task(action.run(spinners))
+                named_tasks[key] = asyncio.create_task(
+                    action.run(spinners.create_task(action.get_name())))
             # Anonymous tasks
             for action in actions_to_run[1]:
-                anonymous_tasks.append(
-                    asyncio.create_task(action.run(spinners)))
+                anonymous_tasks.append(asyncio.create_task(
+                    action.run(spinners.create_task(action.get_name()))))
             # Start drawing the spinners
             spinner_task = asyncio.create_task(spinners.spin())
             # Now wait for them all to resolve

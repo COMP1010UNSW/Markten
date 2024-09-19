@@ -29,8 +29,10 @@ class run(MarkTenAction):
     def register_cleanup_hook(self, fn: CleanupHook):
         self.cleanup_hooks.append(fn)
 
-    async def run(self, spinners) -> None:
-        task = spinners.create_task(self, self.args[0])
+    def get_name(self) -> str:
+        return self.args[0]
+
+    async def run(self, task) -> None:
         task.running()
         process = await asyncio.create_subprocess_exec(
             *self.args,
@@ -70,8 +72,10 @@ class run_parallel(MarkTenAction):
 
         self.process: asyncio.subprocess.Process | None = None
 
-    async def run(self, spinners) -> None:
-        task = spinners.create_task(self, self.args[0])
+    def get_name(self) -> str:
+        return self.args[0]
+
+    async def run(self, task) -> None:
         self.process = await asyncio.create_subprocess_exec(
             *self.args,
             stdout=asyncio.subprocess.PIPE,
