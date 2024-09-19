@@ -1,10 +1,18 @@
-def stdin(param_name: str):
+from markten.more_itertools import ReuseIterable, RegenerateIterable
+
+
+def stdin(param_name: str, repeat_values: bool = False):
     """
     Get parameter values as lines from stdin.
     """
-    try:
-        while True:
-            value = input(f"Enter {param_name}: ")
-            yield value
-    except EOFError:
-        pass
+    def generator():
+        try:
+            while True:
+                yield input(f"Enter {param_name}: ")
+        except (EOFError, KeyboardInterrupt):
+            pass
+
+    if repeat_values:
+        return ReuseIterable(generator())
+    else:
+        return RegenerateIterable(generator)

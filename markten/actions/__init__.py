@@ -7,3 +7,4 @@ from .__action import MarkTenAction
 from . import git
 from . import editor
 from . import process
+from . import python

@@ -29,7 +29,7 @@ def recursive_generator(
             yield {keys_head: value} | current_params
 
 
-def generator_iterator(
+def dict_permutations_iterator(
     params: Mapping[str, Iterable[Any]],
 ) -> Generator[dict[str, Any], None, None]:
     """

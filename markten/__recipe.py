@@ -8,7 +8,7 @@ import inspect
 from .actions import MarkTenAction
 from typing import Union, Callable, Any
 from collections.abc import Mapping, Iterable
-from .__iterator import generator_iterator
+from .__permutations import dict_permutations_iterator
 from . import __consts as consts
 from .__spinners import SpinnerManager
 
@@ -113,7 +113,7 @@ class Recipe:
         """Async implementation of running the marking recipe"""
         print(f"== MarkTen | v{consts.VERSION} ==")
         print(f"Running recipe '{self.__name}'")
-        for params in generator_iterator(self.__params):
+        for params in dict_permutations_iterator(self.__params):
             # Begin marking with the given parameters
             show_current_params(params)
             await self.__run_recipe(params)
