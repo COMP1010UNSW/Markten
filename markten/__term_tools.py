@@ -65,6 +65,16 @@ def set_position(pos: tuple[int, int]) -> None:
     print(f"\033[{r};{c}H", end='', flush=True)
 
 
+def save_cursor():
+    """Instruct the terminal to save the current cursor position."""
+    print('\0337', end='', flush=True)
+
+
+def restore_cursor():
+    """Instruct the terminal to restore the saved cursor position."""
+    print('\0338', end='', flush=True)
+
+
 def clear_line():
     """
     Clear the current line of output.
@@ -82,10 +92,6 @@ def print_clear(*args: object, **kwargs):
 
 if __name__ == '__main__':
     # Simple test program
-    pos = get_position()
-    print(f"Terminal position is {pos}")
-    pos = get_position()
-    print(f"Now it is {pos}")
-    pos = pos[0] + 5, 15
-    set_position(pos)
-    print("What about now?")
+    # print("\n" * 100)
+    set_position((-10, 0))
+    print("What about now?\n" * 10)
