@@ -35,6 +35,11 @@ class SpinnerTask:
         self.__status = TaskStatus.Setup
         self.__name = name
         self.__message: str | None = None
+        self.__logs: list[str] = []
+
+    def log(self, line: str) -> None:
+        self.__logs.append(line)
+        self.__spinners.draw_frame()
 
     def message(self, msg: str | None) -> None:
         self.__message = msg
@@ -67,6 +72,9 @@ class SpinnerTask:
             case TaskStatus.Failure:
                 print(f"❌   {self.__name} {msg}")
 
+        for line in self.__logs:
+            print(f" |  {line}")
+
 
 class SpinnerManager:
     def __init__(self, name: str) -> None:
@@ -74,8 +82,7 @@ class SpinnerManager:
         """Name of spinner"""
         self.__task_list: list[SpinnerTask] = []
         """List of tasks, as they appear while rendering"""
-        # Save the cursor position
-        term.saveCursor()
+        self.__cursor = term.get_position()
 
     def create_task(self, name: str) -> SpinnerTask:
         """
@@ -95,7 +102,9 @@ class SpinnerManager:
 
     async def spin(self) -> None:
         """
-        Begin the spin task
+        Begin the spin task.
+
+        This will run infinitely, until the task is cancelled.
         """
         # Move the cursor to the starting position
         while True:
@@ -105,7 +114,7 @@ class SpinnerManager:
             await asyncio.sleep(SPIN_FRAME_LENGTH)
 
     def draw_frame(self):
-        term.restoreCursor()
+        term.set_position(self.__cursor)
         completed_tasks = self.__count_complete()
         print(f"{self.__name} ({completed_tasks}/{len(self.__task_list)})")
         # Draw the spinners

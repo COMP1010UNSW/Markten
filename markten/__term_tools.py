@@ -2,61 +2,82 @@
 # MarkTen / term tools
 
 Simple functions to handle terminal output.
-
-Many of these are sourced from the 'py-term' library. I just wanted to cut back
-on dependencies.
-
-The MIT License (MIT)
-
-Copyright (c) 2015-2021 René Tanczos
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
 """
 import sys
 
 
-def send(cmd):
-    sys.stdout.write(cmd)
-    sys.stdout.flush()
+if sys.platform == "win32":
+    def getch():
+        """
+        Getch on Windows.
+
+        https://stackoverflow.com/a/3523340/6335363
+        """
+        import msvcrt
+        return msvcrt.getch()
+else:
+    def getch():
+        """
+        Getch on unix systems.
+
+        https://stackoverflow.com/a/72825322/6335363
+        """
+        import termios
+        import tty
+        fd = sys.stdin.fileno()
+        orig = termios.tcgetattr(fd)
+
+        try:
+            # or tty.setraw(fd) if you prefer raw mode's behavior.
+            tty.setcbreak(fd)
+            return sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSAFLUSH, orig)
 
 
-def saveCursor():
-    send('\0337')
-    # send('\033[s')
+def get_position() -> tuple[int, int]:
+    """
+    Returns the position in the terminal, as `(row, col)`.
+
+    https://stackoverflow.com/a/8353312/6335363
+    """
+    print("\033[6n", end='', flush=True)
+    assert getch() == "\033"
+    assert getch() == "["
+
+    row = ''
+    while (ch := getch()) != ';':
+        row += ch
+    col = ''
+    while (ch := getch()) != 'R':
+        col += ch
+
+    return int(row), int(col)
 
 
-def restoreCursor():
-    send('\0338')
-    # send('\033[u')
+def set_position(pos: tuple[int, int]) -> None:
+    """
+    Set the terminal position to the given state.
 
-
-def clear():
-    send('\033[2J')
-
-
-def clearLineFromPos():
-    send('\033[K')
-
-
-def clearLineToPos():
-    send('\033[1K')
+    https://stackoverflow.com/a/54630943/6335363
+    """
+    r, c = pos
+    print(f"\033[{r};{c}H", end='', flush=True)
 
 
 def clearLine():
-    send('\033[2K')
+    """
+    Clear the current line of output.
+    """
+    print('\033[2K', end='', flush=True)
+
+
+if __name__ == '__main__':
+    # Simple test program
+    pos = get_position()
+    print(f"Terminal position is {pos}")
+    pos = get_position()
+    print(f"Now it is {pos}")
+    pos = pos[0] + 5, 15
+    set_position(pos)
+    print("What about now?")
