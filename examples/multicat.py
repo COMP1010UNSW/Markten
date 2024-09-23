@@ -1,5 +1,10 @@
 """
-Just display the user's text back to them
+# Examples / Multicat
+
+Just display the user's text back to them.
+
+Demonstrates the difference between `repeat_values` flags for the `stdin`
+parameter generator.
 """
 from markten import Recipe, parameters, actions
 
