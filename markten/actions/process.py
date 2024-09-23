@@ -8,6 +8,7 @@ import signal
 from logging import Logger
 from typing import Callable, Coroutine, Any
 from .__action import MarkTenAction
+from .__async_process import run_process
 
 
 log = Logger(__name__)
@@ -34,22 +35,13 @@ class run(MarkTenAction):
 
     async def run(self, task) -> None:
         task.running()
-        process = await asyncio.create_subprocess_exec(
-            *self.args,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
+        returncode = await run_process(
+            self.args,
+            on_stdout=task.log,
+            on_stderr=task.log,
         )
-        stdout, stderr = await process.communicate()
-        if process.returncode:
-            task.fail(f"Process exited with code {process.returncode}")
-            log.error("\n".join([
-                f"Subprocess {self.args[0]} exited with error code: {
-                    process.returncode}",
-                "stdout:",
-                stdout.decode(),
-                "stderr:",
-                stderr.decode(),
-            ]))
+        if returncode:
+            task.fail(f"Process exited with code {returncode}")
             raise RuntimeError("process.run: action failed")
         task.succeed()
 

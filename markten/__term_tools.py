@@ -72,8 +72,12 @@ def clear_line():
     print('\033[2K', end='', flush=True)
 
 
-def print_clear(*args: object):
-    print('\033[2K', *args)
+def print_clear(*args: object, **kwargs):
+    """
+    Print text after clearing the current line.
+    """
+    clear_line()
+    print(*args, **kwargs)
 
 
 if __name__ == '__main__':

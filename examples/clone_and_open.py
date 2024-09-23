@@ -36,7 +36,7 @@ def open_code(directory: Path):
 
 def print_student_info(zid: str):
     """Look up student info"""
-    return actions.process.run_parallel("ssh", "cse", "acc", zid)
+    return actions.process.run("ssh", "cse", "acc", zid)
 
 
 marker = Recipe("COMP2511 Lab Marking")

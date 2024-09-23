@@ -5,6 +5,8 @@ Actions associated with `git` and Git repos.
 """
 from logging import Logger
 from pathlib import Path
+
+from markten.__utils import TextCollector
 from .__async_process import run_process
 
 from .__action import MarkTenAction
@@ -29,15 +31,11 @@ class clone(MarkTenAction):
         # Make a temporary directory
         task.message("Creating temporary directory")
 
-        clone_path = ''
-
-        def on_stdout(text: str):
-            nonlocal clone_path
-            clone_path += text
+        clone_path = TextCollector()
 
         if await run_process(
             ("mktemp", "--directory"),
-            on_stdout=on_stdout,
+            on_stdout=clone_path,
             on_stderr=task.log,
         ):
             task.fail("mktemp failed")
@@ -49,7 +47,7 @@ class clone(MarkTenAction):
         else:
             branch_args = []
 
-        program = ("git", "clone", *branch_args, self.repo, clone_path)
+        program = ("git", "clone", *branch_args, self.repo, str(clone_path))
         task.running(' '.join(program))
 
         clone = await run_process(
@@ -61,7 +59,7 @@ class clone(MarkTenAction):
             raise Exception("Task failed")
 
         task.succeed(f"Cloned {self.repo} to {clone_path}")
-        return Path(clone_path)
+        return Path(str(clone_path))
 
     async def cleanup(self) -> None:
         # Temporary directory will be automatically cleaned up by the OS, so
