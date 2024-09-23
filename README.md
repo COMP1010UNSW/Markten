@@ -28,7 +28,7 @@ from stdin.
 ```py
 from markten import Recipe, parameters, actions
 
-marker = Recipe("COMP2511 Lab Marking")
+marker = Recipe("Clone COMP1010 repos")
 
 marker.parameter("repo", parameters.stdin("Repo name"))
 ```
