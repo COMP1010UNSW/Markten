@@ -5,6 +5,7 @@ Contains the definition for the main MarkTen class.
 """
 import asyncio
 import inspect
+from traceback import print_exception
 from .actions import MarkTenAction
 from typing import Union, Callable, Any
 from collections.abc import Mapping, Iterable
@@ -116,10 +117,14 @@ class Recipe:
         for params in dict_permutations_iterator(self.__params):
             # Begin marking with the given parameters
             show_current_params(params)
-            await self.__run_recipe(params)
-            print("Recipe ran successfully.")
+            try:
+                await self.__run_recipe(params)
+            except Exception as e:
+                print("\n\n")
+                print_exception(e)
+            print()
 
-        print("Recipe ran successfully for all inputs")
+        print("Recipe ran for all inputs")
 
     async def __run_recipe(self, params: Mapping[str, Any]):
         """Execute the marking recipe using the given params"""
@@ -152,13 +157,26 @@ class Recipe:
             spinner_task = asyncio.create_task(spinners.spin())
             # Now wait for them all to resolve
             results: dict[str, Any] = {}
+            task_errors: list[Exception] = []
             for key, task in named_tasks.items():
-                results[key] = await task
+                try:
+                    results[key] = await task
+                except Exception as e:
+                    task_errors.append(e)
             for task in anonymous_tasks:
-                await task
+                try:
+                    await task
+                except Exception as e:
+                    task_errors.append(e)
 
             # Cancel the spinner task
             spinner_task.cancel()
+
+            if len(task_errors):
+                raise ExceptionGroup(
+                    f"Task failed on step {i + 1}",
+                    task_errors,
+                )
 
             # Now merge the results with the params
             params |= results
