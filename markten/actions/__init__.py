@@ -8,3 +8,12 @@ from . import git
 from . import editor
 from . import process
 from . import python
+
+
+__all__ = [
+    'MarkTenAction',
+    'git',
+    'editor',
+    'process',
+    'python',
+]
