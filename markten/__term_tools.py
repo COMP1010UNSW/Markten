@@ -65,11 +65,15 @@ def set_position(pos: tuple[int, int]) -> None:
     print(f"\033[{r};{c}H", end='', flush=True)
 
 
-def clearLine():
+def clear_line():
     """
     Clear the current line of output.
     """
     print('\033[2K', end='', flush=True)
+
+
+def print_clear(*args: object):
+    print('\033[2K', *args)
 
 
 if __name__ == '__main__':

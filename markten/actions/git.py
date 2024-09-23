@@ -3,9 +3,9 @@
 
 Actions associated with `git` and Git repos.
 """
-import asyncio
 from logging import Logger
 from pathlib import Path
+from .__async_process import run_process
 
 from .__action import MarkTenAction
 
@@ -29,19 +29,19 @@ class clone(MarkTenAction):
         # Make a temporary directory
         task.message("Creating temporary directory")
 
-        mktemp = await asyncio.create_subprocess_exec(
-            "mktemp",
-            "--directory",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout, stderr = await mktemp.communicate()
-        if mktemp.returncode:
+        clone_path = ''
+
+        def on_stdout(text: str):
+            nonlocal clone_path
+            clone_path += text
+
+        if await run_process(
+            ("mktemp", "--directory"),
+            on_stdout=on_stdout,
+            on_stderr=task.log,
+        ):
             task.fail("mktemp failed")
             raise RuntimeError("mktemp failed")
-
-        clone_path = Path(stdout.decode().strip())
-        task.running(f"git clone {self.repo}")
 
         # Perform the git clone
         if self.branch:
@@ -49,21 +49,19 @@ class clone(MarkTenAction):
         else:
             branch_args = []
 
-        clone = await asyncio.create_subprocess_exec(
-            "git",
-            "clone",
-            *branch_args,
-            self.repo,
-            clone_path,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
+        program = ("git", "clone", *branch_args, self.repo, clone_path)
+        task.running(' '.join(program))
+
+        clone = await run_process(
+            program,
+            on_stderr=task.log,
         )
-        stdout, stderr = await clone.communicate()
-        if clone.returncode:
-            task.fail(f"git clone exited with error code: {clone.returncode}")
+        if clone:
+            task.fail(f"git clone exited with error code: {clone}")
+            raise Exception("Task failed")
 
         task.succeed(f"Cloned {self.repo} to {clone_path}")
-        return clone_path
+        return Path(clone_path)
 
     async def cleanup(self) -> None:
         # Temporary directory will be automatically cleaned up by the OS, so

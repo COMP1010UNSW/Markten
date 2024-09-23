@@ -6,6 +6,7 @@ Class for displaying multiple parallel spinners.
 from enum import Enum
 import asyncio
 from . import __term_tools as term
+from .__term_tools import print_clear
 
 
 SPIN_FRAMES = "|/-\\"
@@ -38,7 +39,7 @@ class SpinnerTask:
         self.__logs: list[str] = []
 
     def log(self, line: str) -> None:
-        self.__logs.append(line)
+        self.__logs.append(line.strip())
         self.__spinners.draw_frame()
 
     def message(self, msg: str | None) -> None:
@@ -64,16 +65,17 @@ class SpinnerTask:
         msg = f" -- {self.__message}" if self.__message else ""
         match self.__status:
             case TaskStatus.Setup:
-                print(f"⏳  {get_frame(i)} {self.__name} {msg}")
+                print_clear(f"⏳  {get_frame(i)} {self.__name} {msg}")
             case TaskStatus.Running:
-                print(f"⏱️  {get_frame(i)} {self.__name} {msg}")
+                print_clear(f"⏱️  {get_frame(i)} {self.__name} {msg}")
             case TaskStatus.Success:
-                print(f"✅   {self.__name} {msg}")
+                print_clear(f"✅   {self.__name} {msg}")
             case TaskStatus.Failure:
-                print(f"❌   {self.__name} {msg}")
+                print_clear(f"❌   {self.__name} {msg}")
 
         for line in self.__logs:
-            print(f" |  {line}")
+            print_clear(f"  |  {line}")
+        # print_clear(" output length:", len(self.__logs))
 
 
 class SpinnerManager:
@@ -116,8 +118,8 @@ class SpinnerManager:
     def draw_frame(self):
         term.set_position(self.__cursor)
         completed_tasks = self.__count_complete()
-        print(f"{self.__name} ({completed_tasks}/{len(self.__task_list)})")
+        print_clear(
+            f"{self.__name} ({completed_tasks}/{len(self.__task_list)})")
         # Draw the spinners
         for task in self.__task_list:
-            term.clearLine()
             task.display(self.__frame)

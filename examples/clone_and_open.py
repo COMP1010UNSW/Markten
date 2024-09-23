@@ -22,7 +22,7 @@ def setup(lab: str, zid: str):
     directory = actions.git.clone(
         f"git@nw-syd-gitlab.cseunsw.tech:COMP2511/{
             term}/students/{zid}/{lab}.git",
-        branch="marking",
+        # branch="marking",
     )
     return {
         "directory": directory,
