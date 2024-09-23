@@ -41,7 +41,7 @@ class clone(MarkTenAction):
             raise RuntimeError("mktemp failed")
 
         clone_path = Path(stdout.decode().strip())
-        task.running("Cloning repository")
+        task.running(f"git clone {self.repo}")
 
         # Perform the git clone
         if self.branch:
@@ -62,7 +62,7 @@ class clone(MarkTenAction):
         if clone.returncode:
             task.fail(f"git clone exited with error code: {clone.returncode}")
 
-        task.succeed(f"Cloned to {clone_path}")
+        task.succeed(f"Cloned {self.repo} to {clone_path}")
         return clone_path
 
     async def cleanup(self) -> None:

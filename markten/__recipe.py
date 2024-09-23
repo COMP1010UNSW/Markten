@@ -9,7 +9,7 @@ from .actions import MarkTenAction
 from typing import Union, Callable, Any
 from collections.abc import Mapping, Iterable
 from .__permutations import dict_permutations_iterator
-from . import __consts as consts
+from . import __utils as utils
 from .__spinners import SpinnerManager
 
 
@@ -111,7 +111,7 @@ class Recipe:
 
     async def __do_run(self):
         """Async implementation of running the marking recipe"""
-        print(f"== MarkTen | v{consts.VERSION} ==")
+        utils.show_banner()
         print(f"Running recipe '{self.__name}'")
         for params in dict_permutations_iterator(self.__params):
             # Begin marking with the given parameters
