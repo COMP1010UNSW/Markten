@@ -20,6 +20,24 @@ $ pipx install markten
 done! ✨ 🌟 ✨
 ```
 
+## Running recipes
+
+You can execute the recipe directly, like you would any Python script:
+
+```sh
+$ python my_recipe.py
+...
+```
+
+You can also use the `markten` executable if you want to keep `markten`'s 
+dependencies in an isolated environment. The Python script you provide as
+an argument is executed within that environment.
+
+```sh
+$ markten my_recipe.py
+...
+```
+
 ## How it works
 
 Define your recipe parameters. For example, this recipe takes in git repo names
