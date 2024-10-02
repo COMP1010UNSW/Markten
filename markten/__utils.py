@@ -14,7 +14,7 @@ def show_banner():
 class TextCollector:
     """
     Collects text when called. When stringified, it produces the output, joined
-    by newlines.
+    by newlines. With leading and trailing whitespace stripped.
     """
 
     def __init__(self) -> None:
@@ -24,4 +24,4 @@ class TextCollector:
         self.__output.append(line)
 
     def __str__(self) -> str:
-        return '\n'.join(self.__output)
+        return '\n'.join(self.__output).strip()

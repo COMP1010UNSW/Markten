@@ -21,8 +21,8 @@ class clone(MarkTenAction):
     """
 
     def __init__(self, repo_url: str, /, branch: str | None = None) -> None:
-        self.repo = repo_url
-        self.branch = branch
+        self.repo = repo_url.strip()
+        self.branch = branch.strip() if branch else None
 
     def get_name(self) -> str:
         return "git clone"
@@ -41,13 +41,7 @@ class clone(MarkTenAction):
             task.fail("mktemp failed")
             raise RuntimeError("mktemp failed")
 
-        # Perform the git clone
-        if self.branch:
-            branch_args = ["-b", self.branch, "--single-branch"]
-        else:
-            branch_args = []
-
-        program = ("git", "clone", *branch_args, self.repo, str(clone_path))
+        program = ("git", "clone", self.repo, str(clone_path))
         task.running(' '.join(program))
 
         clone = await run_process(
@@ -57,6 +51,22 @@ class clone(MarkTenAction):
         if clone:
             task.fail(f"git clone exited with error code: {clone}")
             raise Exception("Task failed")
+
+        if self.branch:
+            program = (
+                "git",
+                "checkout",
+                "-b",
+                self.branch,
+                f"origin/{self.branch}",
+            )
+            task.running(' '.join(program))
+            task.log(' '.join(program))
+            clone = await run_process(
+                program,
+                cwd=str(clone_path),
+                on_stderr=task.log,
+            )
 
         task.succeed(f"Cloned {self.repo} to {clone_path}")
         return Path(str(clone_path))

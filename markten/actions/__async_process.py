@@ -22,6 +22,7 @@ async def read_stream(
 async def run_process(
     cmd: tuple[str, ...],
     stdin: str = '',
+    cwd: str | None = None,
     *,
     on_stdout: Callable[[str], None] | None = None,
     on_stderr: Callable[[str], None] | None = None,
@@ -32,6 +33,7 @@ async def run_process(
     """
     process = await asyncio.create_subprocess_exec(
         *cmd,
+        cwd=cwd,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
