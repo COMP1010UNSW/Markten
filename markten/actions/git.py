@@ -41,7 +41,7 @@ class clone(MarkTenAction):
             task.fail("mktemp failed")
             raise RuntimeError("mktemp failed")
 
-        program = ("git", "clone", self.repo, str(clone_path))
+        program: tuple[str, ...] = ("git", "clone", self.repo, str(clone_path))
         task.running(' '.join(program))
 
         clone = await run_process(
