@@ -1,18 +1,40 @@
-[tool.poetry]
+[project]
 name = "markten"
 version = "0.1.1"
-description = "A framework for automating the process of manual marking in bulk"
-authors = ["Maddy Guthridge <hello@maddyguthridge.com>"]
-license = "MIT"
+description = "Assess your students' work with all of the delight and none of the tedium"
 readme = "README.md"
+license = "MIT"
+authors = [{ name = "Maddy Guthridge", email = "hello@maddyguthridge.com" }]
 
-[tool.poetry.dependencies]
-python = "^3.11"
+keywords = [
+    "marking",
+    "auto-marker",
+    "automation",
+    "xmark",
+    "imark",
+    "mark",
+    "ten",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Development Status :: 5 - Production/Stable",
+    "Topic :: Education",
+    "Topic :: Education :: Testing",
+    "Typing :: Typed",
+]
 
+requires-python = ">=3.11"
 
-[tool.poetry.scripts]
+[project.scripts]
 markten = 'markten.__main__:main'
 
+[tool.poetry]
+include = ["py.typed"]
 
 [build-system]
 requires = ["poetry-core"]
