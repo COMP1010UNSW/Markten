@@ -3,6 +3,7 @@
 
 Programmatic entrypoint to MarkTen, allowing it to be run as a script.
 """
+
 import os
 import sys
 
@@ -20,7 +21,12 @@ def show_info():
 
 
 def main():
-    if len(sys.argv) == 1 or sys.argv[1] in ["-h", "--help"]:
+    if len(sys.argv) == 1 or sys.argv[1] in [
+        "-h",
+        "--help",
+        "-v",
+        "--version",
+    ]:
         show_info()
         exit(1)
     else:
@@ -31,5 +37,5 @@ def main():
         os.execv(sys.executable, ("python", recipe, *args))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
