@@ -78,3 +78,20 @@ def test_filter_hidden_windows():
             win32con.FILE_ATTRIBUTE_HIDDEN,
         )
         assert list(list_dir(tmp, skip_hidden=True)) == []
+
+
+def test_custom_filter():
+    """
+    Skips files that don't pass custom filter function
+    """
+
+    def filter_fn(p: Path) -> bool:
+        return p.name == "a"
+
+    with TemporaryDirectory() as tmp_dir:
+        tmp = Path(tmp_dir)
+        (tmp / "a").touch()
+        (tmp / "b").touch()
+        assert list(list_dir(tmp, filter_fn)) == [
+            tmp / "a",
+        ]

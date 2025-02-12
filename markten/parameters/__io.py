@@ -5,6 +5,7 @@ def stdin(param_name: str, repeat_values: bool = False):
     """
     Get parameter values as lines from stdin.
     """
+
     def generator():
         try:
             while True:
