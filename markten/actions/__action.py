@@ -3,8 +3,8 @@
 
 Base class for MarkTen actions.
 """
-from typing import Protocol, Any, runtime_checkable
 from abc import abstractmethod
+from typing import Any, Protocol, runtime_checkable
 
 from markten.__spinners import SpinnerTask
 

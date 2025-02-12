@@ -3,27 +3,26 @@
 
 Contains the definition for the main MarkTen class.
 """
+
 import asyncio
 import inspect
+from collections.abc import Callable, Iterable, Mapping
 from traceback import print_exception
-from .actions import MarkTenAction
-from typing import Union, Callable, Any
-from collections.abc import Mapping, Iterable
-from .__permutations import dict_permutations_iterator
-from . import __utils as utils
-from .__spinners import SpinnerManager
+from typing import Any
 
+from . import __utils as utils
+from .__permutations import dict_permutations_iterator
+from .__spinners import SpinnerManager
+from .actions import MarkTenAction
 
 ParameterPermutations = Mapping[str, Iterable[Any]]
 """
 Mapping containing iterables for all permutations of the available params.
 """
 
-GeneratedActions = Union[
-    MarkTenAction,
-    tuple[MarkTenAction, ...],
-    Mapping[str, MarkTenAction],
-]
+GeneratedActions = (
+    MarkTenAction | tuple[MarkTenAction, ...] | Mapping[str, MarkTenAction]
+)
 """
 `GeneratedActions` is a collection of actions run in parallel as a part of a
 step in the marking recipe.
@@ -36,35 +35,26 @@ This can be one of:
   are stored as parameters under the given names.
 """
 
-ActionGenerator = Callable[..., 'ActionStep']
+ActionGenerator = Callable[..., "ActionStep"]
 """
 An `ActionGenerator` is a function that may accept any current parameters, and
 must return an `ActionStep`, which is expanded recursively.
 """
 
 
-ActionStepItem = Union[
-    ActionGenerator,
-    GeneratedActions,
-]
+ActionStepItem = ActionGenerator | GeneratedActions
 """
 Each item in a step must either be a function that generates actions, or
 pre-generated actions.
 """
 
 
-ActionStep = Union[
-    ActionStepItem,
-    tuple[ActionStepItem, ...]
-]
+ActionStep = ActionStepItem | tuple[ActionStepItem, ...]
 """
 An `ActionStep` is a collection of items that should be executed in parallel.
 """
 
-GeneratedActionStep = tuple[
-    dict[str, MarkTenAction],
-    list[MarkTenAction]
-]
+GeneratedActionStep = tuple[dict[str, MarkTenAction], list[MarkTenAction]]
 """
 An `ActionStep` after running any action generators.
 
@@ -148,11 +138,15 @@ class Recipe:
             # Named tasks
             for key, action in actions_to_run[0].items():
                 named_tasks[key] = asyncio.create_task(
-                    action.run(spinners.create_task(action.get_name())))
+                    action.run(spinners.create_task(action.get_name()))
+                )
             # Anonymous tasks
             for action in actions_to_run[1]:
-                anonymous_tasks.append(asyncio.create_task(
-                    action.run(spinners.create_task(action.get_name()))))
+                anonymous_tasks.append(
+                    asyncio.create_task(
+                        action.run(spinners.create_task(action.get_name()))
+                    )
+                )
             # Start drawing the spinners
             spinner_task = asyncio.create_task(spinners.spin())
             # Now wait for them all to resolve
@@ -213,8 +207,7 @@ def generate_actions_for_step(
             # Use recursion so that we can simplify the handling of multiple
             # steps
             result = union_generated_action_step_items(
-                result,
-                generate_actions_for_step(step_item, params)
+                result, generate_actions_for_step(step_item, params)
             )
         return result
     elif isinstance(step, MarkTenAction):

@@ -2,9 +2,9 @@
 Clone and open a bunch of students' work by reading student IDs from stdin.
 """
 from argparse import ArgumentParser
-from markten import Recipe, parameters, actions
 from pathlib import Path
 
+from markten import Recipe, actions, parameters
 
 term = "24T3"
 

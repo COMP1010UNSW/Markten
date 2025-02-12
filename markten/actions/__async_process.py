@@ -4,7 +4,7 @@
 Utility code for interacting with processes asynchronously.
 """
 import asyncio
-from typing import Callable
+from collections.abc import Callable
 
 
 async def read_stream(

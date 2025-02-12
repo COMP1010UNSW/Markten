@@ -7,10 +7,9 @@ from logging import Logger
 from pathlib import Path
 
 from markten.__utils import TextCollector
-from .__async_process import run_process
 
 from .__action import MarkTenAction
-
+from .__async_process import run_process
 
 log = Logger(__name__)
 

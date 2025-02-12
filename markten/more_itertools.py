@@ -1,6 +1,5 @@
-from collections.abc import Iterable, Iterator
-from typing import TypeVar, Generic, Callable
-
+from collections.abc import Callable, Iterable, Iterator
+from typing import Generic, TypeVar
 
 T = TypeVar('T')
 
@@ -24,8 +23,7 @@ class ReuseIterable(Generic[T]):
                 yield item
 
         def later_iterations():
-            for item in self.__past_values:
-                yield item
+            yield from self.__past_values
 
         if self.__generated:
             return later_iterations()

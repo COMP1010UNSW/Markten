@@ -5,9 +5,9 @@ Gather parameters from the file system.
 """
 import stat
 import sys
+from collections.abc import Callable, Iterable
 from os import PathLike
 from pathlib import Path
-from typing import Callable, Iterable
 
 
 def file_is_visible(filepath: Path):

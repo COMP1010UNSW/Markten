@@ -5,11 +5,12 @@ Actions for running subprocesses
 """
 import asyncio
 import signal
+from collections.abc import Callable, Coroutine
 from logging import Logger
-from typing import Callable, Coroutine, Any
+from typing import Any
+
 from .__action import MarkTenAction
 from .__async_process import run_process
-
 
 log = Logger(__name__)
 
@@ -84,6 +85,6 @@ class run_parallel(MarkTenAction):
             # Wait for process to exit
             try:
                 await asyncio.wait_for(self.process.wait(), self.timeout)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 self.process.kill()
                 log.error("Subprocess failed to exit in given timeout window")

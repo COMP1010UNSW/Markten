@@ -3,8 +3,9 @@
 
 Programmatic entrypoint to MarkTen, allowing it to be run as a script.
 """
-import sys
 import os
+import sys
+
 from . import __utils as utils
 
 

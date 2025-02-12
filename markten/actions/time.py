@@ -8,6 +8,7 @@ import time
 from typing import Any
 
 from markten.__spinners import SpinnerTask
+
 from .__action import MarkTenAction
 
 

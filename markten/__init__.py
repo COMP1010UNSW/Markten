@@ -3,10 +3,8 @@
 
 A manual marking automation framework.
 """
+from . import actions, parameters
 from .__recipe import Recipe
-from . import parameters
-from . import actions
-
 
 __all__ = [
     'Recipe',

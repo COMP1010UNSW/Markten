@@ -5,8 +5,8 @@ Actions associated with text editors
 """
 from logging import Logger
 from pathlib import Path
-from .process import run
 
+from .process import run
 
 log = Logger(__name__)
 

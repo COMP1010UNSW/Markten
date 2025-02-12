@@ -1,6 +1,6 @@
 
 
-from collections.abc import Iterable, Mapping, Generator
+from collections.abc import Generator, Iterable, Mapping
 from typing import Any
 
 

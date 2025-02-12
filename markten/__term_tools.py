@@ -5,7 +5,6 @@ Simple functions to handle terminal output.
 """
 import sys
 
-
 if sys.platform == "win32":
     def getch():
         """

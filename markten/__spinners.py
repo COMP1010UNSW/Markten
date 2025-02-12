@@ -7,9 +7,9 @@ This is used to report the progress of tasks that run simultaneously.
 """
 import asyncio
 from enum import Enum
+
 from . import __term_tools as term
 from .__term_tools import print_clear
-
 
 SPIN_FRAMES = "|/-\\"
 """

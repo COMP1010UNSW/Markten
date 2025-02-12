@@ -2,8 +2,9 @@
 Actions to do with Python
 """
 import inspect
+from collections.abc import Awaitable, Callable
+
 from .__action import MarkTenAction
-from typing import Callable, Awaitable
 
 
 class function(MarkTenAction):

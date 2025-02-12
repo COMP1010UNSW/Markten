@@ -1,4 +1,4 @@
-from markten.more_itertools import ReuseIterable, RegenerateIterable
+from markten.more_itertools import RegenerateIterable, ReuseIterable
 
 
 def stdin(param_name: str, repeat_values: bool = False):
