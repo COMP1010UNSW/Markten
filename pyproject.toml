@@ -44,6 +44,8 @@ include = ["py.typed"]
 ruff = "^0.9.6"
 mypy = "^1.15.0"
 pytest = "^8.3.4"
+pywin32 = { version = ">=308", platform = "win32" }
+types-pywin32 = ">=308.0.0.20250128"
 
 [tool.mypy]
 check_untyped_defs = true

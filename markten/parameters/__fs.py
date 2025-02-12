@@ -3,11 +3,14 @@
 
 Gather parameters from the file system.
 """
+
 import stat
 import sys
 from collections.abc import Callable, Iterable
 from os import PathLike
 from pathlib import Path
+
+StrPath = str | PathLike[str]
 
 
 def file_is_visible(filepath: Path):
@@ -18,7 +21,7 @@ def file_is_visible(filepath: Path):
     ones), and also ignores files that have a hidden attribute on Windows.
     """
     name = filepath.absolute().name
-    return not (name.startswith('.') or has_hidden_attribute(filepath))
+    return not (name.startswith(".") or has_hidden_attribute(filepath))
 
 
 def has_hidden_attribute(filepath: Path) -> bool:
@@ -29,7 +32,8 @@ def has_hidden_attribute(filepath: Path) -> bool:
     """
     if sys.platform == "win32":
         return bool(
-            filepath.stat().st_file_attributes & stat.FILE_ATTRIBUTE_HIDDEN)
+            filepath.stat().st_file_attributes & stat.FILE_ATTRIBUTE_HIDDEN
+        )
     else:
         return False
 
@@ -43,7 +47,7 @@ def require_files(p: Path) -> bool:
 
 
 def list_dir(
-    path: PathLike,
+    path: StrPath,
     *filter_fns: Callable[[Path], bool],
     skip_hidden=True,
     directories=False,
@@ -60,4 +64,8 @@ def list_dir(
         filters.append(require_files)
     if skip_hidden:
         filters.append(file_is_visible)
-    return p.iterdir()
+
+    def keep_file(path: Path) -> bool:
+        return all(f(path) for f in filters)
+
+    return (f for f in p.iterdir() if keep_file(f))
