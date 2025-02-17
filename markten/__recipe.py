@@ -17,7 +17,12 @@ from .__permutations import dict_permutations_iterator
 from .__spinners import SpinnerManager
 from .actions import MarkTenAction
 
-ParameterPermutations = Mapping[str, Iterable[Any]]
+ParameterType = Iterable[Any]
+"""
+Type of a MarkTen parameter.
+"""
+
+ParameterPermutations = Mapping[str, ParameterType]
 """
 Mapping containing iterables for all permutations of the available params.
 """
@@ -75,10 +80,10 @@ class Recipe:
         recipe_name: str,
     ) -> None:
         self.__name = recipe_name
-        self.__params: dict[str, Any] = {}
+        self.__params: dict[str, ParameterType] = {}
         self.__steps: list[tuple[str, ActionStep]] = []
 
-    def parameter(self, name: str, values: Iterable[str]) -> None:
+    def parameter(self, name: str, values: ParameterType) -> None:
         """
         Add a single parameter to the recipe.
         """
