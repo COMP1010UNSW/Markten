@@ -47,4 +47,5 @@ marker.parameters(command_line())
 marker.step("setup repo", setup)
 marker.step("view code", (open_code, print_student_info))
 
-marker.run()
+if __name__ == '__main__':
+    marker.run()

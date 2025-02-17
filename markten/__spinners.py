@@ -9,7 +9,7 @@ This is used to report the progress of tasks that run simultaneously.
 import asyncio
 from enum import Enum
 
-from rich.console import Group
+from rich.console import Group, RenderableType
 from rich.live import Live
 from rich.panel import Panel
 
@@ -105,13 +105,14 @@ class SpinnerTask:
         """
         return self.__status in [TaskStatus.Success, TaskStatus.Failure]
 
-    def display(self, i: int) -> Panel:
+    def display(self, i: int) -> RenderableType:
         """
         Return the lines used to display the spinner's state.
         """
         title: str
         style: str
         msg = f" -- {self.__message}" if self.__message else ""
+        logs = self.__logs[-10:]
         match self.__status:
             case TaskStatus.Setup:
                 title = f"⏳  {get_frame(i)} {self.__name}{msg}"
@@ -125,8 +126,10 @@ class SpinnerTask:
             case TaskStatus.Failure:
                 title = f"❌   {self.__name}{msg}"
                 style = "red"
+                # Show full logs
+                logs = self.__logs
         return Panel(
-            "\n".join(self.__logs[-10:]),
+            "\n".join(logs).strip(),
             title=title,
             style=style,
         )
@@ -222,7 +225,7 @@ class SpinnerManager:
         title = f"{self.__name} ({completed_tasks}/{len(self.__task_list)})"
 
         # Draw the spinners
-        tasks: list[Panel] = []
+        tasks: list[RenderableType] = []
         for task in self.__task_list:
             tasks.append(task.display(self.__frame))
 

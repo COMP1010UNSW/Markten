@@ -79,6 +79,10 @@ class Recipe:
         self,
         recipe_name: str,
     ) -> None:
+        # https://stackoverflow.com/a/13699329/6335363
+        frame = inspect.stack()[1]
+        module = inspect.getmodule(frame[0])
+        self.__file = module.__file__ if module is not None else None
         self.__name = recipe_name
         self.__params: dict[str, ParameterType] = {}
         self.__steps: list[tuple[str, ActionStep]] = []
@@ -109,8 +113,7 @@ class Recipe:
 
     async def __do_run(self):
         """Async implementation of running the marking recipe"""
-        utils.show_banner()
-        print(f"Running recipe '{self.__name}'")
+        utils.show_banner(self.__name, self.__file)
         for params in dict_permutations_iterator(self.__params):
             # Begin marking with the given parameters
             show_current_params(params)
