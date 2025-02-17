@@ -7,34 +7,17 @@ Programmatic entrypoint to MarkTen, allowing it to be run as a script.
 import os
 import sys
 
-from . import __utils as utils
+import click
+
+from . import __consts as consts
 
 
-def show_info():
-    utils.show_banner()
-    print("Usage:")
-    print("  markten <recipe-script> [arguments]")
-    print("  This will execute the given script in Markten's Python")
-    print("  environment.")
-    print("License: MIT")
-    print("Author: Maddy Guthridge")
-
-
-def main():
-    if len(sys.argv) == 1 or sys.argv[1] in [
-        "-h",
-        "--help",
-        "-v",
-        "--version",
-    ]:
-        show_info()
-        exit(1)
-    else:
-        # Attempt to execute the given file with any remaining arguments
-        recipe = sys.argv[1]
-        args = sys.argv[2:]
-
-        os.execv(sys.executable, ("python", recipe, *args))
+@click.command("markten")
+@click.argument("recipe", type=click.Path(exists=True, readable=True))
+@click.argument("args", nargs=-1)
+@click.version_option(consts.VERSION)
+def main(recipe: str, args: tuple[str, ...]):
+    os.execv(sys.executable, ("python", recipe, *args))
 
 
 if __name__ == "__main__":
