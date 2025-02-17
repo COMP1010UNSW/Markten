@@ -110,17 +110,26 @@ class SpinnerTask:
         Return the lines used to display the spinner's state.
         """
         title: str
+        style: str
         msg = f" -- {self.__message}" if self.__message else ""
         match self.__status:
             case TaskStatus.Setup:
                 title = f"⏳  {get_frame(i)} {self.__name}{msg}"
+                style = "yellow"
             case TaskStatus.Running:
                 title = f"⏱️  {get_frame(i)} {self.__name}{msg}"
+                style = "cyan"
             case TaskStatus.Success:
                 title = f"✅   {self.__name}{msg}"
+                style = "green"
             case TaskStatus.Failure:
                 title = f"❌   {self.__name}{msg}"
-        return Panel("\n".join(self.__logs[-10:]), title=title)
+                style = "red"
+        return Panel(
+            "\n".join(self.__logs[-10:]),
+            title=title,
+            style=style,
+        )
 
 
 class SpinnerManager:
@@ -217,4 +226,5 @@ class SpinnerManager:
         for task in self.__task_list:
             tasks.append(task.display(self.__frame))
 
-        self.__live.update(Panel(Group(*tasks), title=title))
+        panel = Panel(Group(*tasks), title=title)
+        self.__live.update(panel)
