@@ -11,8 +11,16 @@ import click
 
 from . import __consts as consts
 
+HELP_STR = """
+Markten -- Assess your students' work with all of the delight and none of the
+tedium.
 
-@click.command("markten")
+View the documentation for information on writing recipes:
+https://github.com/COMP1010UNSW/MarkTen
+"""
+
+
+@click.command("markten", help=HELP_STR)
 @click.argument("recipe", type=click.Path(exists=True, readable=True))
 @click.argument("args", nargs=-1)
 @click.version_option(consts.VERSION)
