@@ -1,6 +1,7 @@
 """
 Clone and open a bunch of students' work by reading student IDs from stdin.
 """
+
 from argparse import ArgumentParser
 from pathlib import Path
 
@@ -20,9 +21,11 @@ def command_line():
 def setup(lab: str, zid: str):
     """Set up lab exercise"""
     directory = actions.git.clone(
-        f"git@nw-syd-gitlab.cseunsw.tech:COMP2511/{
-            term}/students/{zid}/{lab}.git",
-        branch="marking",
+        f"git@nw-syd-gitlab.cseunsw.tech:COMP2511/{term}/students/{zid}/{
+            lab
+        }.git",
+        branch="submission",
+        fallback_to_main=True,
     )
     return {
         "directory": directory,
@@ -47,5 +50,5 @@ marker.parameters(command_line())
 marker.step("setup repo", setup)
 marker.step("view code", (open_code, print_student_info))
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     marker.run()
