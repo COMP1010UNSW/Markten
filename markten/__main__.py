@@ -7,34 +7,52 @@ Programmatic entrypoint to MarkTen, allowing it to be run as a script.
 import os
 import sys
 
-from . import __utils as utils
+import click
+from rich.console import Console
+from rich.panel import Panel
+
+from . import __consts as consts
+
+console = Console()
+
+title = f"MarkTen - v{consts.VERSION}"
+
+help_text = """
+✅  Assess your students' work with all of the [green]delight[/] and none of the [red]tedium[/]
+
+Usage: [bold cyan]markten [OPTIONS] RECIPE [ARGS]...[/]
+
+Options:
+  [yellow]--version[/]  Show the version and exit.
+  [yellow]--help[/]     Show this message and exit.
+
+Made with [magenta]<3[/] by Maddy Guthridge
+
+View the project on GitHub: [cyan]https://github.com/COMP1010UNSW/MarkTen[/]
+View the documentation: [cyan]https://github.com/COMP1010UNSW/MarkTen[/]
+""".strip()  # noqa: E501
 
 
-def show_info():
-    utils.show_banner()
-    print("Usage:")
-    print("  markten <recipe-script> [arguments]")
-    print("  This will execute the given script in Markten's Python")
-    print("  environment.")
-    print("License: MIT")
-    print("Author: Maddy Guthridge")
+def show_help(ctx: click.Context, param: click.Option, value: bool):
+    if not value or ctx.resilient_parsing:
+        return
+    console.print(Panel(help_text, title=title, border_style="blue"))
+    ctx.exit()
 
 
-def main():
-    if len(sys.argv) == 1 or sys.argv[1] in [
-        "-h",
-        "--help",
-        "-v",
-        "--version",
-    ]:
-        show_info()
-        exit(1)
-    else:
-        # Attempt to execute the given file with any remaining arguments
-        recipe = sys.argv[1]
-        args = sys.argv[2:]
-
-        os.execv(sys.executable, ("python", recipe, *args))
+@click.command("markten", help=help_text)
+@click.option(
+    "--help",
+    is_flag=True,
+    callback=show_help,
+    expose_value=False,
+    is_eager=True,
+)
+@click.argument("recipe", type=click.Path(exists=True, readable=True))
+@click.argument("args", nargs=-1)
+@click.version_option(consts.VERSION)
+def main(recipe: str, args: tuple[str, ...]):
+    os.execv(sys.executable, ("python", recipe, *args))
 
 
 if __name__ == "__main__":

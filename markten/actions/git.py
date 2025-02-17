@@ -3,6 +3,7 @@
 
 Actions associated with `git` and Git repos.
 """
+
 from logging import Logger
 from pathlib import Path
 
@@ -19,9 +20,16 @@ class clone(MarkTenAction):
     Perform a `git clone` operation.
     """
 
-    def __init__(self, repo_url: str, /, branch: str | None = None) -> None:
+    def __init__(
+        self,
+        repo_url: str,
+        /,
+        branch: str | None = None,
+        fallback_to_main: bool = False,
+    ) -> None:
         self.repo = repo_url.strip()
         self.branch = branch.strip() if branch else None
+        self.fallback_to_main = fallback_to_main
 
     def get_name(self) -> str:
         return "git clone"
@@ -41,7 +49,7 @@ class clone(MarkTenAction):
             raise RuntimeError("mktemp failed")
 
         program: tuple[str, ...] = ("git", "clone", self.repo, str(clone_path))
-        task.running(' '.join(program))
+        task.running(" ".join(program))
 
         clone = await run_process(
             program,
@@ -59,13 +67,20 @@ class clone(MarkTenAction):
                 self.branch,
                 f"origin/{self.branch}",
             )
-            task.running(' '.join(program))
-            task.log(' '.join(program))
-            clone = await run_process(
+            task.running(" ".join(program))
+            task.log(" ".join(program))
+            checkout = await run_process(
                 program,
                 cwd=str(clone_path),
                 on_stderr=task.log,
             )
+            if checkout:
+                # Error when checking out branch
+                if self.fallback_to_main:
+                    task.log("Note: remaining on main branch")
+                else:
+                    task.fail(f"Failed to check out to '{self.branch}'")
+                    raise Exception("Task failed")
 
         task.succeed(f"Cloned {self.repo} to {clone_path}")
         return Path(str(clone_path))

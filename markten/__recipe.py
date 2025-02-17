@@ -5,17 +5,24 @@ Contains the definition for the main MarkTen class.
 """
 
 import asyncio
+import contextlib
 import inspect
 from collections.abc import Callable, Iterable, Mapping
-from traceback import print_exception
 from typing import Any
 
+from rich.live import Live
+
 from . import __utils as utils
-from .__permutations import dict_permutations_iterator
 from .__spinners import SpinnerManager
 from .actions import MarkTenAction
+from .more_itertools import dict_permutations_iterator
 
-ParameterPermutations = Mapping[str, Iterable[Any]]
+ParameterType = Iterable[Any]
+"""
+Type of a MarkTen parameter.
+"""
+
+ParameterPermutations = Mapping[str, ParameterType]
 """
 Mapping containing iterables for all permutations of the available params.
 """
@@ -72,11 +79,15 @@ class Recipe:
         self,
         recipe_name: str,
     ) -> None:
+        # https://stackoverflow.com/a/13699329/6335363
+        frame = inspect.stack()[1]
+        module = inspect.getmodule(frame[0])
+        self.__file = module.__file__ if module is not None else None
         self.__name = recipe_name
-        self.__params: dict[str, Any] = {}
+        self.__params: dict[str, ParameterType] = {}
         self.__steps: list[tuple[str, ActionStep]] = []
 
-    def parameter(self, name: str, values: Iterable[str]) -> None:
+    def parameter(self, name: str, values: ParameterType) -> None:
         """
         Add a single parameter to the recipe.
         """
@@ -102,16 +113,14 @@ class Recipe:
 
     async def __do_run(self):
         """Async implementation of running the marking recipe"""
-        utils.show_banner()
-        print(f"Running recipe '{self.__name}'")
+        utils.recipe_banner(self.__name, self.__file)
         for params in dict_permutations_iterator(self.__params):
             # Begin marking with the given parameters
             show_current_params(params)
-            try:
+            # FIXME: Currently errors are eaten without a trace
+            # Once logging is introduced, make them get logged
+            with contextlib.suppress(Exception):
                 await self.__run_recipe(params)
-            except Exception as e:
-                print("\n\n")
-                print_exception(e)
             print()
 
         print("Recipe ran for all inputs")
@@ -130,50 +139,51 @@ class Recipe:
             actions_to_run = generate_actions_for_step(step, params)
             actions_by_step.append(actions_to_run)
 
-            spinners = SpinnerManager(f"{i + 1}. {name}")
+            with Live() as live:
+                spinners = SpinnerManager(f"{i + 1}. {name}", live)
 
-            # Run all tasks
-            named_tasks: dict[str, asyncio.Task[Any]] = {}
-            anonymous_tasks: list[asyncio.Task[Any]] = []
-            # Named tasks
-            for key, action in actions_to_run[0].items():
-                named_tasks[key] = asyncio.create_task(
-                    action.run(spinners.create_task(action.get_name()))
-                )
-            # Anonymous tasks
-            for action in actions_to_run[1]:
-                anonymous_tasks.append(
-                    asyncio.create_task(
+                # Run all tasks
+                named_tasks: dict[str, asyncio.Task[Any]] = {}
+                anonymous_tasks: list[asyncio.Task[Any]] = []
+                # Named tasks
+                for key, action in actions_to_run[0].items():
+                    named_tasks[key] = asyncio.create_task(
                         action.run(spinners.create_task(action.get_name()))
                     )
-                )
-            # Start drawing the spinners
-            spinner_task = asyncio.create_task(spinners.spin())
-            # Now wait for them all to resolve
-            results: dict[str, Any] = {}
-            task_errors: list[Exception] = []
-            for key, task in named_tasks.items():
-                try:
-                    results[key] = await task
-                except Exception as e:
-                    task_errors.append(e)
-            for task in anonymous_tasks:
-                try:
-                    await task
-                except Exception as e:
-                    task_errors.append(e)
+                # Anonymous tasks
+                for action in actions_to_run[1]:
+                    anonymous_tasks.append(
+                        asyncio.create_task(
+                            action.run(spinners.create_task(action.get_name()))
+                        )
+                    )
+                # Start drawing the spinners
+                spinner_task = asyncio.create_task(spinners.spin())
+                # Now wait for them all to resolve
+                results: dict[str, Any] = {}
+                task_errors: list[Exception] = []
+                for key, task in named_tasks.items():
+                    try:
+                        results[key] = await task
+                    except Exception as e:
+                        task_errors.append(e)
+                for task in anonymous_tasks:
+                    try:
+                        await task
+                    except Exception as e:
+                        task_errors.append(e)
 
-            # Cancel the spinner task
-            spinner_task.cancel()
+                # Cancel the spinner task
+                spinner_task.cancel()
 
-            if len(task_errors):
-                raise ExceptionGroup(
-                    f"Task failed on step {i + 1}",
-                    task_errors,
-                )
+                if len(task_errors):
+                    raise ExceptionGroup(
+                        f"Task failed on step {i + 1}",
+                        task_errors,
+                    )
 
-            # Now merge the results with the params
-            params |= results
+                # Now merge the results with the params
+                params |= results
 
         # Now perform the teardown
         for named_actions, anonymous_actions in reversed(actions_by_step):

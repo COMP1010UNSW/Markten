@@ -5,11 +5,13 @@ Class for displaying multiple parallel spinners.
 
 This is used to report the progress of tasks that run simultaneously.
 """
+
 import asyncio
 from enum import Enum
 
-from . import __term_tools as term
-from .__term_tools import print_clear
+from rich.console import Group, RenderableType
+from rich.live import Live
+from rich.panel import Panel
 
 SPIN_FRAMES = "|/-\\"
 """
@@ -28,6 +30,7 @@ def get_frame(i: int) -> str:
 
 class TaskStatus(Enum):
     """Status of a task"""
+
     Setup = 0
     """Task is being set up"""
     Running = 1
@@ -43,7 +46,7 @@ class SpinnerTask:
     A single task that is associated with a spinner.
     """
 
-    def __init__(self, spinners: 'SpinnerManager', name: str) -> None:
+    def __init__(self, spinners: "SpinnerManager", name: str) -> None:
         """
         Create a spinner task.
 
@@ -102,26 +105,34 @@ class SpinnerTask:
         """
         return self.__status in [TaskStatus.Success, TaskStatus.Failure]
 
-    def display(self, i: int) -> list[str]:
+    def display(self, i: int) -> RenderableType:
         """
         Return the lines used to display the spinner's state.
         """
-        result: list[str] = []
+        title: str
+        style: str
         msg = f" -- {self.__message}" if self.__message else ""
+        logs = self.__logs[-10:]
         match self.__status:
             case TaskStatus.Setup:
-                result.append(f"⏳  {get_frame(i)} {self.__name} {msg}")
+                title = f"⏳  {get_frame(i)} {self.__name}{msg}"
+                style = "yellow"
             case TaskStatus.Running:
-                result.append(f"⏱️  {get_frame(i)} {self.__name} {msg}")
+                title = f"⏱️  {get_frame(i)} {self.__name}{msg}"
+                style = "cyan"
             case TaskStatus.Success:
-                result.append(f"✅   {self.__name} {msg}")
+                title = f"✅   {self.__name}{msg}"
+                style = "green"
             case TaskStatus.Failure:
-                result.append(f"❌   {self.__name} {msg}")
-
-        for line in self.__logs:
-            result.append(f"  |  {line}")
-        # result.append(" output length:", len(self.__logs))
-        return result
+                title = f"❌   {self.__name}{msg}"
+                style = "red"
+                # Show full logs
+                logs = self.__logs
+        return Panel(
+            "\n".join(logs).strip(),
+            title=title,
+            style=style,
+        )
 
 
 class SpinnerManager:
@@ -142,7 +153,7 @@ class SpinnerManager:
         spinner_task.cancel()
     """
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, live: Live) -> None:
         """
         Create a spinner manager.
 
@@ -153,9 +164,10 @@ class SpinnerManager:
         """Name of spinner"""
         self.__task_list: list[SpinnerTask] = []
         """List of tasks, as they appear while rendering"""
-        # self.__start_line_num = term.get_position()[0]
-        # """Starting line of the output"""
-        term.save_cursor()
+        self.__live = live
+        """Rich live output"""
+        self.__frame = 0
+        """Frame number, updated while spinning"""
 
     def create_task(self, name: str) -> SpinnerTask:
         """
@@ -166,15 +178,13 @@ class SpinnerManager:
         """
         task = SpinnerTask(self, name)
         self.__task_list.append(task)
-        self.__frame = 0
         return task
 
     def __count_complete(self) -> int:
         """Returns the number of completed tasks"""
-        return len(list(filter(
-            lambda task: task.is_resolved(),
-            self.__task_list
-        )))
+        return len(
+            list(filter(lambda task: task.is_resolved(), self.__task_list))
+        )
 
     async def spin(self) -> None:
         """
@@ -210,27 +220,14 @@ class SpinnerManager:
         major headaches and console spamming, but that is a future Maddy
         problem.
         """
-        term.restore_cursor()
-        # term_size = os.get_terminal_size()
-        # term.set_position((self.__start_line_num, 0))
         completed_tasks = self.__count_complete()
 
-        output = [f"{self.__name} ({completed_tasks}/{len(self.__task_list)})"]
+        title = f"{self.__name} ({completed_tasks}/{len(self.__task_list)})"
 
         # Draw the spinners
+        tasks: list[RenderableType] = []
         for task in self.__task_list:
-            output.extend(task.display(self.__frame))
+            tasks.append(task.display(self.__frame))
 
-        for line in output:
-            print_clear(line)
-
-        # # Determine the number of lines used, including wrapping
-        # lines_used = 0
-        # for line in output:
-        #     lines_used += math.ceil(wcswidth(line) / term_size.columns)
-        #
-        # # If we exceeded the number of lines in the terminal
-        # if self.__start_line_num + lines_used > term_size.lines:
-        #     # We must update the cursor position to instead be negative,
-        #     # based on the new scroll position
-        #     self.__start_line_num = term_size.lines - lines_used
+        panel = Panel(Group(*tasks), title=title)
+        self.__live.update(panel)
