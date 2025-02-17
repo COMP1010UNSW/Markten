@@ -8,19 +8,46 @@ import os
 import sys
 
 import click
+from rich.console import Console
+from rich.panel import Panel
 
 from . import __consts as consts
 
-HELP_STR = """
-Markten -- Assess your students' work with all of the delight and none of the
-tedium.
+console = Console()
 
-View the documentation for information on writing recipes:
-https://github.com/COMP1010UNSW/MarkTen
-"""
+title = f"MarkTen - v{consts.VERSION}"
+
+help_text = """
+✅  Assess your students' work with all of the [green]delight[/] and none of the [red]tedium[/]
+
+Usage: [bold cyan]markten [OPTIONS] RECIPE [ARGS]...[/]
+
+Options:
+  [yellow]--version[/]  Show the version and exit.
+  [yellow]--help[/]     Show this message and exit.
+
+Made with [magenta]<3[/] by Maddy Guthridge
+
+View the project on GitHub: [cyan]https://github.com/COMP1010UNSW/MarkTen[/]
+View the documentation: [cyan]https://github.com/COMP1010UNSW/MarkTen[/]
+""".strip()  # noqa: E501
 
 
-@click.command("markten", help=HELP_STR)
+def show_help(ctx: click.Context, param: click.Option, value: bool):
+    if not value or ctx.resilient_parsing:
+        return
+    console.print(Panel(help_text, title=title, border_style="blue"))
+    ctx.exit()
+
+
+@click.command("markten", help=help_text)
+@click.option(
+    "--help",
+    is_flag=True,
+    callback=show_help,
+    expose_value=False,
+    is_eager=True,
+)
 @click.argument("recipe", type=click.Path(exists=True, readable=True))
 @click.argument("args", nargs=-1)
 @click.version_option(consts.VERSION)

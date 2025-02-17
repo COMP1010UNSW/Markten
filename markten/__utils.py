@@ -27,7 +27,7 @@ def relativize_file(file: Path, to: Path | None = None) -> Path:
         return file
 
 
-def show_banner(
+def recipe_banner(
     recipe_name: str | None,
     recipe_file: str | None,
 ):

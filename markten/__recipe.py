@@ -113,7 +113,7 @@ class Recipe:
 
     async def __do_run(self):
         """Async implementation of running the marking recipe"""
-        utils.show_banner(self.__name, self.__file)
+        utils.recipe_banner(self.__name, self.__file)
         for params in dict_permutations_iterator(self.__params):
             # Begin marking with the given parameters
             show_current_params(params)
