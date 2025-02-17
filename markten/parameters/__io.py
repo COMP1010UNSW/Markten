@@ -1,3 +1,5 @@
+import readline
+
 from markten.more_itertools import RegenerateIterable, ReuseIterable
 
 
@@ -9,7 +11,9 @@ def stdin(param_name: str, repeat_values: bool = False):
     def generator():
         try:
             while True:
-                yield input(f"Enter {param_name}: ")
+                value = input(f"Enter {param_name}: ")
+                readline.add_history(value)
+                yield value
         except (EOFError, KeyboardInterrupt):
             pass
 
