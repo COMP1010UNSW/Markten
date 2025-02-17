@@ -5,9 +5,9 @@ Contains the definition for the main MarkTen class.
 """
 
 import asyncio
+import contextlib
 import inspect
 from collections.abc import Callable, Iterable, Mapping
-from traceback import print_exception
 from typing import Any
 
 from rich.live import Live
@@ -117,11 +117,8 @@ class Recipe:
         for params in dict_permutations_iterator(self.__params):
             # Begin marking with the given parameters
             show_current_params(params)
-            try:
+            with contextlib.suppress(Exception):
                 await self.__run_recipe(params)
-            except Exception as e:
-                print("\n\n")
-                print_exception(e)
             print()
 
         print("Recipe ran for all inputs")
