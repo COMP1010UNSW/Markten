@@ -13,9 +13,9 @@ from typing import Any
 from rich.live import Live
 
 from . import __utils as utils
-from .__permutations import dict_permutations_iterator
 from .__spinners import SpinnerManager
 from .actions import MarkTenAction
+from .more_itertools import dict_permutations_iterator
 
 ParameterType = Iterable[Any]
 """
