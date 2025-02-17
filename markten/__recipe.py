@@ -117,6 +117,8 @@ class Recipe:
         for params in dict_permutations_iterator(self.__params):
             # Begin marking with the given parameters
             show_current_params(params)
+            # FIXME: Currently errors are eaten without a trace
+            # Once logging is introduced, make them get logged
             with contextlib.suppress(Exception):
                 await self.__run_recipe(params)
             print()
