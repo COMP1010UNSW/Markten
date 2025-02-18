@@ -4,7 +4,7 @@
 Programmatic entrypoint to MarkTen, allowing it to be run as a script.
 """
 
-import os
+import runpy
 import sys
 
 import click
@@ -52,7 +52,10 @@ def show_help(ctx: click.Context, param: click.Option, value: bool):
 @click.argument("args", nargs=-1)
 @click.version_option(consts.VERSION)
 def main(recipe: str, args: tuple[str, ...]):
-    os.execv(sys.executable, ("python", recipe, *args))
+    # replace argv
+    sys.argv = [sys.argv[0], *args]
+    # Then run code as main
+    runpy.run_path(recipe, {}, "__main__")
 
 
 if __name__ == "__main__":
