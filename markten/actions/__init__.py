@@ -3,7 +3,7 @@
 
 Code defining actions that are run during the marking recipe.
 """
-from . import editor, git, process, python, time
+from . import editor, git, process, python, time, webbrowser
 from .__action import MarkTenAction
 
 __all__ = [
@@ -13,4 +13,5 @@ __all__ = [
     'process',
     'python',
     'time',
+    'webbrowser',
 ]
