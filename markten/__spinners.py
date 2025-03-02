@@ -203,22 +203,8 @@ class SpinnerManager:
         """
         Draw a frame of the spinners.
 
-        This currently redraws all output, which isn't especially efficient.
-
-        Most of the commented code relies on getting and setting the terminal
-        cursor position manually, which appears to break when the number of
-        lines in the terminal is too small (causing text to be printed multiple
-        times).
-
-        Since it's impossible to jump to a negative cursor position manually,
-        we rely on the save/restore cursor functionality, since at least it
-        only massively breaks if the terminal size is extremely tiny, and works
-        reasonably well otherwise.
-
-        I need to find a library that handles all of the terminal outputting so
-        I can get nice outputs that update in multiple places without causing
-        major headaches and console spamming, but that is a future Maddy
-        problem.
+        This takes advantage of `rich` to handle all the complex panel
+        management.
         """
         completed_tasks = self.__count_complete()
 

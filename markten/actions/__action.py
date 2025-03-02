@@ -3,6 +3,7 @@
 
 Base class for MarkTen actions.
 """
+
 from abc import abstractmethod
 from typing import Any, Protocol, runtime_checkable
 
@@ -12,8 +13,12 @@ from markten.__spinners import SpinnerTask
 @runtime_checkable
 class MarkTenAction(Protocol):
     """
-    An action object, which executes the given action
+    An action object, which executes the given action.
+
+    These objects are used by MarkTen to handle running a task, and performing
+    any required cleanup afterwards.
     """
+
     @abstractmethod
     def get_name(self) -> str:
         """
@@ -28,7 +33,8 @@ class MarkTenAction(Protocol):
         This should perform setup for the action. Its resultant awaitable
         should resolve once the setup is complete.
 
-        It can also use the `spinners` to register progress for the task.
+        It can also use the `task` object to display progress for the task and
+        log any required output.
 
         The awaited result may be used as a parameter for future steps. For
         example, the `git.clone` action gives the path to the temporary
@@ -40,8 +46,8 @@ class MarkTenAction(Protocol):
     async def cleanup(self) -> None:
         """
         Clean up after the recipe has been run, performing any required
-        teardown.
+        tear-down.
 
-        The resultant awaitable should resolve once the teardown is complete.
+        The resultant awaitable should resolve once the tear-down is complete.
         """
         raise NotImplementedError

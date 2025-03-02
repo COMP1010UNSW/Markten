@@ -20,9 +20,13 @@ from .more_itertools import dict_permutations_iterator
 ParameterType = Iterable[Any]
 """
 Type of a MarkTen parameter.
+
+Parameters are intended to be iterated over, so that the recipe can be applied
+across all combinations. In order to get a single value of a parameter, you
+should wrap it in an iterable type, eg by making it a single-element tuple.
 """
 
-ParameterPermutations = Mapping[str, ParameterType]
+ParameterMapping = Mapping[str, ParameterType]
 """
 Mapping containing iterables for all permutations of the available params.
 """
@@ -79,6 +83,19 @@ class Recipe:
         self,
         recipe_name: str,
     ) -> None:
+        """
+        Create a MarkTen Recipe
+
+        A recipe is the framework for building a MarkTen script. After creating
+        the recipe, you can add parameters and steps to it, in order to specify
+        how to execute the task.
+
+        Parameters
+        ----------
+        recipe_name : str
+            Name of the recipe
+        """
+        # Determine caller's module to show in debug info
         # https://stackoverflow.com/a/13699329/6335363
         frame = inspect.stack()[1]
         module = inspect.getmodule(frame[0])
@@ -88,31 +105,72 @@ class Recipe:
         self.__steps: list[tuple[str, ActionStep]] = []
 
     def parameter(self, name: str, values: ParameterType) -> None:
-        """
-        Add a single parameter to the recipe.
+        """Add a single parameter to the recipe.
+
+        The parameter will be passed to all steps of the recipe.
+
+        Parameters
+        ----------
+        name : str
+            Name of the parameter
+        values : ParameterType
+            An iterable of values for the parameter. The value will be lazily
+            evaluated, so it is possible to perform actions such as reading
+            from `stdin` for each value without overwhelming the user on script
+            start-up.
         """
         self.__params[name] = values
 
-    def parameters(self, parameters: ParameterPermutations) -> None:
-        """
-        Add a collection of parameters for the recipe.
+    def parameters(self, parameters: ParameterMapping) -> None:
+        """Add a collection of parameters for the recipe.
+
+        This should be a dictionary where each key is the name of a parameter,
+        and each value is an iterable of values to use for that parameter.
+
+        Parameters
+        ----------
+        parameters : ParameterMapping
+            Mapping of parameters.
         """
         self.__params |= dict(parameters)
 
     def step(self, name: str, step: ActionStep) -> None:
-        """
-        Add a step to the recipe
+        """Add a step to the recipe.
+
+        The step can be a variety of types:
+        * A single `MarkTenAction` object
+        * A function which can accept parameters and named action results from
+          previous steps.
+        * A dictionary of any combination of the above. The return value
+          of the action's `run` method will be stored as a parameter for future
+          steps using the name in the dictionary key.
+        * A tuple of any combination of the above.
+
+        If multiple actions are specified as one step, they will be run in
+        parallel.
+
+        Parameters
+        ----------
+        name : str
+            Name of this step (eg "Look up student details")
+        step : ActionStep
+            Action(s) to be run, as per the documentation above.
         """
         self.__steps.append((name, step))
 
     def run(self):
-        """
-        Run the marking recipe for each combination given by the generators.
-        """
-        asyncio.run(self.__do_run())
+        """Run the marking recipe for each combination given by the generators.
 
-    async def __do_run(self):
-        """Async implementation of running the marking recipe"""
+        This begins the `asyncio` event loop, and so cannot be called from
+        async code.
+        """
+        asyncio.run(self.async_run())
+
+    async def async_run(self):
+        """Run the marking recipe for each combination given by the generators.
+
+        This function can be used if an `asyncio` event loop is already active.
+        """
         utils.recipe_banner(self.__name, self.__file)
         for params in dict_permutations_iterator(self.__params):
             # Begin marking with the given parameters
@@ -228,7 +286,7 @@ def generate_actions_for_step(
         return (dict(step), [])
     else:
         # step is an ActionGenerator function
-        action_fn_output = execute_action_function(step, params)
+        action_fn_output = execute_action_generator(step, params)
         # Parse the result recursively
         return generate_actions_for_step(action_fn_output, params)
 
@@ -245,7 +303,7 @@ def union_generated_action_step_items(
     return named_actions, anonymous_actions
 
 
-def execute_action_function(
+def execute_action_generator(
     fn: ActionGenerator,
     params: Mapping[str, Any],
 ) -> ActionStep:
@@ -260,5 +318,7 @@ def execute_action_function(
     else:
         # Only pass the args used
         named_args = args[0]
-        param_subset = {k: v for k, v in params.items() if k in named_args}
+        param_subset = {
+            name: value for name, value in params.items() if name in named_args
+        }
         return fn(**param_subset)

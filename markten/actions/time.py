@@ -3,6 +3,7 @@
 
 Actions for managing timing
 """
+
 import asyncio
 import time
 from typing import Any
@@ -14,10 +15,20 @@ from .__action import MarkTenAction
 
 class sleep(MarkTenAction):
     """
-    Waits for the given duration.
+    Action that waits for the given amount of time.
     """
 
     def __init__(self, duration: float) -> None:
+        """Pause execution for the given duration.
+
+        Equivalent to a `time.sleep()` call, but without blocking other
+        actions.
+
+        Parameters
+        ----------
+        duration : float
+            Time to pause, in seconds.
+        """
         self.duration = duration
 
     def get_name(self) -> str:
@@ -39,7 +50,6 @@ class sleep(MarkTenAction):
                 await asyncio.sleep(remaining)
             now = time.time()
 
-        task.succeed('0s remaining')
+        task.succeed("0s remaining")
 
-    async def cleanup(self) -> None:
-        ...
+    async def cleanup(self) -> None: ...

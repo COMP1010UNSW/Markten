@@ -13,7 +13,7 @@ log = Logger(__name__)
 
 def vs_code(path: Path | None = None):
     """
-    Launch VS Code at the given Path
+    Launch a new VS Code window at the given Path.
     """
     # -n = new window
     # -w = CLI waits for window exit

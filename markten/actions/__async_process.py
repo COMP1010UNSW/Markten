@@ -3,6 +3,7 @@
 
 Utility code for interacting with processes asynchronously.
 """
+
 import asyncio
 from collections.abc import Callable
 
@@ -11,6 +12,7 @@ async def read_stream(
     stream: asyncio.StreamReader,
     cb: Callable[[str], None],
 ) -> None:
+    """Call the given callback for all lines of the given stream"""
     while True:
         line = await stream.readline()
         if line:
@@ -21,7 +23,7 @@ async def read_stream(
 
 async def run_process(
     cmd: tuple[str, ...],
-    stdin: str = '',
+    stdin: str = "",
     cwd: str | None = None,
     *,
     on_stdout: Callable[[str], None] | None = None,

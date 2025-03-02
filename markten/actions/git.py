@@ -29,6 +29,22 @@ class clone(MarkTenAction):
         fallback_to_main: bool = False,
         dir: str | None = None,
     ) -> None:
+        """Perform a `git clone` operation.
+
+        By default, this clones the project to a temporary directory.
+
+        Parameters
+        ----------
+        repo_url : str
+            URL to clone
+        branch : str | None, optional
+            Branch to checkout after cloning is complete, by default None
+        fallback_to_main : bool, optional
+            Whether to fall back to the main branch if the given branch does
+            not exist, by default False
+        dir : str | None, optional
+            Directory to clone to, by default None for a temporary directory
+        """
         self.repo = repo_url.strip()
         self.branch = branch.strip() if branch else None
         self.fallback_to_main = fallback_to_main

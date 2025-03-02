@@ -30,7 +30,16 @@ def relativize_file(file: Path, to: Path | None = None) -> Path:
 def recipe_banner(
     recipe_name: str | None,
     recipe_file: str | None,
-):
+) -> None:
+    """Display a banner to the console for the given recipe
+
+    Parameters
+    ----------
+    recipe_name : str | None
+        Name of recipe
+    recipe_file : str | None
+        File of recipe
+    """
     console = Console()
 
     text = []

@@ -3,6 +3,7 @@
 
 Actions for running subprocesses
 """
+
 import asyncio
 import signal
 from collections.abc import Callable, Coroutine
@@ -20,15 +21,38 @@ CleanupHook = Callable[[], Coroutine[Any, Any, Any]]
 
 class run(MarkTenAction):
     """
-    Run the given process, and don't move to the next step until the process
-    exits.
+    Run the given process, waiting for it to exit before resolving the action.
+
+    Additional hooks can be added to the cleanup process, for example to delete
+    temporary files.
     """
 
-    def __init__(self, *args: str) -> None:
+    def __init__(self, *args: str, allow_nonzero: bool = False) -> None:
+        """Run the given process, waiting for it to exit before resolving the
+        action.
+
+        If the process exits with a non-zero exit code, the task fails unless
+        the `allow_nonzero` flag is given.
+
+        Parameters
+        ----------
+        allow_nonzero : bool, optional
+            Succeed the task, even if the process exited with a non-zero exit
+            code, by default False
+        """
         self.args = args
         self.cleanup_hooks: list[CleanupHook] = []
 
     def register_cleanup_hook(self, fn: CleanupHook):
+        """Register a hook function to be executed after this task is complete.
+
+        This should be an async function.
+
+        Parameters
+        ----------
+        fn : CleanupHook
+            Function to call on cleanup.
+        """
         self.cleanup_hooks.append(fn)
 
     def get_name(self) -> str:
@@ -55,11 +79,20 @@ class run(MarkTenAction):
 
 class run_parallel(MarkTenAction):
     """
-    Run the given process until this step reaches the teardown phase. At that
-    point, send a sigint.
+    Run the given process until this step reaches the tear-down phase. At that
+    point, send a sigint and wait for it to exit.
     """
 
     def __init__(self, *args: str, exit_timeout: float = 2) -> None:
+        """Run the given process in parallel to the following steps. The
+        process is interrupted during the cleanup phase.
+
+        Parameters
+        ----------
+        exit_timeout : float, optional
+            Maximum time to wait before forcefully quitting the subprocess, by
+            default 2 seconds
+        """
         self.args = args
         self.timeout = exit_timeout
 
