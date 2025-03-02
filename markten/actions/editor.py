@@ -15,6 +15,8 @@ def vs_code(path: Path | None = None):
     """
     Launch VS Code at the given Path
     """
+    # -n = new window
+    # -w = CLI waits for window exit
     action = run("code", "-nw", *([str(path)] if path else []))
 
     # Add a hook to remove the temporary directory from VS Code's history
