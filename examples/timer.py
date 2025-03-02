@@ -1,13 +1,16 @@
+"""
+Simple timer example
+"""
 from markten import Recipe, actions, parameters
 
 recipe = Recipe("timer")
 
 
-recipe.parameter("duration", parameters.stdin("duration"))
+recipe.parameter("duration", map(float, parameters.stdin("duration")))
 
 
-def timer(duration: str):
-    return actions.time.sleep(float(duration))
+def timer(duration: float):
+    return actions.time.sleep(duration)
 
 
 recipe.step("wait", timer)
