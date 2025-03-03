@@ -22,7 +22,7 @@ ParameterType = Iterable[Any]
 Type of a MarkTen parameter.
 
 Parameters are intended to be iterated over, so that the recipe can be applied
-across all combinations. In order to get a single value of a parameter, you
+across all combinations. In order to get a single value as a parameter, you
 should wrap it in an iterable type, eg by making it a single-element tuple.
 """
 
