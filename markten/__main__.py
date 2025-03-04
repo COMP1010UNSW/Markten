@@ -4,6 +4,7 @@
 Programmatic entrypoint to MarkTen, allowing it to be run as a script.
 """
 
+import logging
 import runpy
 import sys
 
@@ -40,6 +41,16 @@ def show_help(ctx: click.Context, param: click.Option, value: bool):
     ctx.exit()
 
 
+def handle_verbose(verbose: int):
+    mappings = {
+        0: "CRITICAL",
+        1: "WARNING",
+        2: "INFO",
+        3: "DEBUG",
+    }
+    logging.basicConfig(level=mappings.get(verbose, "DEBUG"))
+
+
 @click.command("markten", help=help_text)
 @click.option(
     "--help",
@@ -48,10 +59,12 @@ def show_help(ctx: click.Context, param: click.Option, value: bool):
     expose_value=False,
     is_eager=True,
 )
+@click.option("-v", "--verbose", count=True)
 @click.argument("recipe", type=click.Path(exists=True, readable=True))
 @click.argument("args", nargs=-1)
 @click.version_option(consts.VERSION)
-def main(recipe: str, args: tuple[str, ...]):
+def main(recipe: str, args: tuple[str, ...], verbose: int = 0):
+    handle_verbose(verbose)
     # replace argv
     sys.argv = [sys.argv[0], *args]
     # Then run code as main
