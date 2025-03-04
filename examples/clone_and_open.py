@@ -34,7 +34,7 @@ def setup(lab: str, zid: str):
 
 def open_code(directory: Path):
     """Open directory in VS Code"""
-    return actions.editor.vs_code(directory)
+    return actions.editor.vs_code(directory, remove_history=True)
 
 
 def print_student_info(zid: str):

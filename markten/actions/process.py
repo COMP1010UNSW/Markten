@@ -75,6 +75,7 @@ class run(MarkTenAction):
         tasks = []
         for hook in self.cleanup_hooks:
             tasks.append(asyncio.create_task(hook()))
+        await asyncio.gather(*tasks)
 
 
 class run_parallel(MarkTenAction):
