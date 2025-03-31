@@ -96,11 +96,11 @@ def vs_code(path: Path | None = None, remove_history: bool = False):
                 ]
 
                 # Then save it back out to VS Code
-                new_history = json.dumps({"entries": new_history})
+                new_history_str = json.dumps({"entries": new_history})
                 await db.execute(
                     "UPDATE ItemTable SET [value] = ? WHERE key = "
                     "'history.recentlyOpenedPathsList'",
-                    (new_history,),
+                    (new_history_str,),
                 )
                 await db.commit()
                 log.info("VS Code history removal success")
