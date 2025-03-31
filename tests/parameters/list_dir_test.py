@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import jestspectation as expect
 import pytest
 
 from markten.parameters import list_dir
@@ -22,10 +23,10 @@ def test_lists_dir():
         tmp = Path(tmp_dir)
         (tmp / "a").touch()
         (tmp / "b").touch()
-        assert list(list_dir(tmp)) == [
+        assert list(list_dir(tmp)) == expect.ListContainingOnly([
             tmp / "a",
             tmp / "b",
-        ]
+        ])
 
 
 def test_filter_dirs_only():

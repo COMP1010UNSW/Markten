@@ -136,6 +136,21 @@ files = [
 ]
 
 [[package]]
+name = "jestspectation"
+version = "1.4.5"
+description = "Pattern matching tools to test complex data structures"
+optional = false
+python-versions = ">=3.9"
+groups = ["dev"]
+files = [
+    {file = "jestspectation-1.4.5-py3-none-any.whl", hash = "sha256:22f86f6b7b103b4244018510027a9b453f677097d7dfd4580a6d89e782669f0a"},
+    {file = "jestspectation-1.4.5.tar.gz", hash = "sha256:ef709fd51d2e72950fc093c34d1fc5eacec568a8756a4f7f649cd5f6ba949570"},
+]
+
+[package.dependencies]
+typing-extensions = ">=4.5.0"
+
+[[package]]
 name = "markdown-it-py"
 version = "3.0.0"
 description = "Python port of markdown-it. Markdown parsing, done right!"
@@ -421,4 +436,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">= 3.11"
-content-hash = "d3322e8d3684ee9f485b53d5c9d57ee12b13ebee2364c42a5a3a3881743f5e44"
+content-hash = "467c5efc0df79f7843ca8f4747cf2d111785ffe36eaf597315ada99bbd0e0ce1"
