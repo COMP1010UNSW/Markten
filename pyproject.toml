@@ -1,6 +1,6 @@
 [project]
 name = "markten"
-version = "0.3.0"
+version = "0.4.0"
 description = "Assess your students' work with all of the delight and none of the tedium"
 readme = "README.md"
 license = "MIT"
