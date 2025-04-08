@@ -8,8 +8,10 @@ import asyncio
 import contextlib
 import inspect
 from collections.abc import Callable, Iterable, Mapping
+from datetime import datetime
 from typing import Any
 
+import humanize
 from rich.live import Live
 
 from . import __utils as utils
@@ -172,16 +174,25 @@ class Recipe:
         This function can be used if an `asyncio` event loop is already active.
         """
         utils.recipe_banner(self.__name, self.__file)
+        recipe_start = datetime.now()
         for params in dict_permutations_iterator(self.__params):
+            start = datetime.now()
             # Begin marking with the given parameters
             show_current_params(params)
             # FIXME: Currently errors are eaten without a trace
             # Once logging is introduced, make them get logged
             with contextlib.suppress(Exception):
                 await self.__run_recipe(params)
+            duration = datetime.now() - start
+            iter_str = humanize.precisedelta(duration, minimum_unit="seconds")
+            print(f"Iteration complete in {iter_str}")
+
             print()
 
-        print("Recipe ran for all inputs")
+        duration = datetime.now() - recipe_start
+        iter_str = humanize.precisedelta(duration, minimum_unit="seconds")
+        print()
+        print(f"All iterations complete in {iter_str}")
 
     async def __run_recipe(self, params: Mapping[str, Any]):
         """Execute the marking recipe using the given params"""
