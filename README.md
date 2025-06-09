@@ -2,6 +2,13 @@
 
 Assess your students' work with all of the delight and none of the tedium.
 
+MarkTen is an automation framework aimed at reducing the pain of marking
+student assignments in bulk. By writing a simple recipe, you can define the
+steps you take to mark an assignment, which can be anything from fetching
+submissions, compiling their code, viewing their codebase in an IDE, or running
+a test suite. It's all done with simple readable Python, with enough power
+under the hood to make even the most annoying workflows trivial.
+
 ## Installing
 
 ```bash
@@ -29,7 +36,7 @@ $ python my_recipe.py
 ...
 ```
 
-You can also use the `markten` executable if you want to keep `markten`'s 
+You can also use the `markten` executable if you want to keep `markten`'s
 dependencies in an isolated environment. The Python script you provide as
 an argument is executed within that environment.
 
