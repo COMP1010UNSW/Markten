@@ -50,7 +50,7 @@ include = ["py.typed"]
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.9.6"
-mypy = "^1.15.0"
+mypy = "^1.16.0"
 pytest = "^8.3.5"
 pywin32 = { version = ">=308", platform = "win32" }
 types-pywin32 = ">=308.0.0.20250128"
