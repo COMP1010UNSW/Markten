@@ -36,6 +36,7 @@ dependencies = [
     "platformdirs (>=4.3.6,<5.0.0)",
     "aiosqlite (>=0.21.0,<0.22.0)",
     "humanize (>=4.12.2,<5.0.0)",
+    "aiofiles (>=24.1.0,<25.0.0)",
 ]
 
 [project.urls]
@@ -56,6 +57,7 @@ pywin32 = { version = ">=308", platform = "win32" }
 types-pywin32 = ">=308.0.0.20250128"
 coverage = "^7.9.1"
 jestspectation = "^1.4.5"
+types-aiofiles = "^24.1.0.20250708"
 
 [tool.mypy]
 check_untyped_defs = true

@@ -24,12 +24,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: 'recursive'
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.11'
     - uses: Gr1N/setup-poetry@v9
     - uses: actions/cache@v4
       with:
@@ -63,7 +61,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.11'
     - uses: Gr1N/setup-poetry@v9
     - uses: actions/cache@v4
       with:
@@ -84,7 +82,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.11'
     - uses: Gr1N/setup-poetry@v9
     - uses: actions/cache@v4
       with:
@@ -92,6 +90,6 @@ jobs:
         key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
     - run: poetry --version
     - run: poetry install
-    - name: Lint with mypy
+    - name: Type-check with mypy
       run: |
-        poetry run mypy .
+        poetry run mypy
