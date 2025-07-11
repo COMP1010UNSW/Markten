@@ -38,13 +38,13 @@ class tempfile(MarkTenAction):
     async def run(self, task) -> Path:
         if self.directory:
             task.message("Creating temporary directory")
-            self.file = await a_tempfile.TemporaryDirectory(prefix="markten")
+            self.file = await a_tempfile.TemporaryDirectory(prefix="markten")  # type: ignore
             # Intentionally ignoring type errors -- they'll go away when I
             # rewrite to use async generators
             self._close = self.file.close  # type: ignore
         else:
             task.message("Creating temporary directory")
-            self.file = await a_tempfile.NamedTemporaryFile(prefix="markten")
+            self.file = await a_tempfile.NamedTemporaryFile(prefix="markten")  # type: ignore
 
         return Path(str(self.file.name))  # type: ignore
 
