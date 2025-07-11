@@ -4,12 +4,12 @@
 Actions associated with `git` and Git repos.
 """
 
+from collections.abc import Awaitable, Callable
 from logging import Logger
 from pathlib import Path
 from typing import Any
 
-from markten.__spinners import SpinnerTask
-from markten.__utils import TextCollector
+from markten.actions.fs import tempfile
 
 from .__action import MarkTenAction
 from .__async_process import run_process
@@ -111,6 +111,26 @@ class clone(MarkTenAction):
             await self._cleanup()
 
 
+class push(MarkTenAction):
+    def __init__(
+        self,
+        dir: Path,
+        /,
+        set_upstream: bool | str = False,
+    ) -> None:
+        super().__init__()
+
+
+class pull(MarkTenAction):
+    def __init__(
+        self,
+        dir: Path,
+        /,
+        set_upstream: bool | str = False,
+    ) -> None:
+        super().__init__()
+
+
 class checkout(MarkTenAction):
     """
     Perform a `git checkout` operation on an existing repository.
@@ -187,7 +207,7 @@ class checkout(MarkTenAction):
                 self.push_to_remote
                 if isinstance(self.push_to_remote, str)
                 else DEFAULT_REMOTE,
-                self.branch_name
+                self.branch_name,
             )
             task.running(" ".join(program))
             remote_create = await run_process(
@@ -197,15 +217,17 @@ class checkout(MarkTenAction):
             if remote_create:
                 error = (
                     f"git push --set-upstream exited with error code: "
-                    f"{remote_create}")
+                    f"{remote_create}"
+                )
 
                 task.fail(error)
                 raise Exception(error)
 
         task.succeed(
             f"Switched to{' new' if self.create else ''} "
-            f"branch {self.branch_name}"
-            + " and pushed to remote" if self.push_to_remote else ""
+            f"branch {self.branch_name}" + " and pushed to remote"
+            if self.push_to_remote
+            else ""
         )
 
 
@@ -275,3 +297,15 @@ class add(MarkTenAction):
             task.succeed("Git: staged all files")
         else:
             task.succeed(f"Git: staged files {self.files}")
+
+
+class commit(MarkTenAction):
+    def __init__(
+        self,
+        dir: Path,
+        message: str,
+        /,
+        all: bool = False,
+        push: bool = False,
+        files: list[Path] | None = None,
+    ) -> None: ...
