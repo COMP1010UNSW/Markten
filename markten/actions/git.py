@@ -15,6 +15,8 @@ from .__async_process import run_process
 
 log = Logger(__name__)
 
+DEFAULT_REMOTE = "origin"
+
 
 class clone(MarkTenAction):
     """
@@ -113,3 +115,97 @@ class clone(MarkTenAction):
         # Temporary directory will be automatically cleaned up by the OS, so
         # there is no need for us to do anything
         return
+
+
+class checkout(MarkTenAction):
+    """
+    Perform a `git checkout` operation on an existing repository.
+    """
+
+    def __init__(
+        self,
+        dir: Path,
+        branch_name: str,
+        /,
+        create: bool = False,
+        push_to_remote: str | bool = False,
+    ) -> None:
+        """Perform a `git checkout` operation.
+
+        This changes the active branch for the given git repository.
+
+        Parameters
+        ----------
+        dir : Path
+            Path to git repository
+        branch_name : str
+            Branch to checkout
+        create : bool, optional
+            Whether to pass a `-b` flag to the `git checkout` operation,
+            signalling that `git` should create a new branch.
+        push_to_remote : str | bool, optional
+            Whether to also push this branch to the given remote. This
+            requires the `create` flag to also be `True`. If `True` is given,
+            this will create the branch on the `origin` remote. Otherwise, if a
+            `str` is given, this will push to that remote.
+        """
+        self.dir = dir
+        self.branch_name = branch_name
+        self.create = create
+        self.push_to_remote = push_to_remote
+
+        if push_to_remote is not None and not create:
+            raise ValueError(
+                "MarkTen.actions.git.checkout: Cannot specify "
+                "`push_to_remote` if `create is False`"
+            )
+
+    def get_name(self) -> str:
+        return "git checkout"
+
+    async def run(self, task) -> None:
+        program: tuple[str, ...] = (
+            "git",
+            "checkout",
+            *(("-b") if self.create else ()),
+            self.branch_name,
+        )
+        task.running(" ".join(program))
+
+        checkout = await run_process(
+            program,
+            on_stderr=task.log,
+        )
+        if checkout:
+            error = f"git checkout exited with error code: {checkout}"
+            task.fail(error)
+            raise Exception(error)
+
+        if self.push_to_remote is not False:
+            program = (
+                "git",
+                "push",
+                "--set-upstream",
+                self.push_to_remote
+                if isinstance(self.push_to_remote, str)
+                else DEFAULT_REMOTE,
+                self.branch_name
+            )
+            task.running(" ".join(program))
+            remote_create = await run_process(
+                program,
+                on_stderr=task.log,
+            )
+            if remote_create:
+                error = (
+                    f"git push --set-upstream exited with error code: "
+                    f"{remote_create}")
+
+                task.fail(error)
+                raise Exception(error)
+
+        task.succeed(
+            f"Switched to{' new' if self.create else ''} "
+            f"branch {self.branch_name}"
+            + " and pushed to remote" if self.push_to_remote else ""
+        )
