@@ -53,27 +53,18 @@ class clone(MarkTenAction):
         self.fallback_to_main = fallback_to_main
         self.dir = dir
 
+        self._cleanup: None | Callable[[], Awaitable[None]] = None
+
     def get_name(self) -> str:
         return "git clone"
 
-    async def mktemp(self, task: SpinnerTask) -> str:
-        # Make a temporary directory
-        task.message("Creating temporary directory")
-
-        clone_path = TextCollector()
-
-        if await run_process(
-            ("mktemp", "--directory"),
-            on_stdout=clone_path,
-            on_stderr=task.log,
-        ):
-            task.fail("mktemp failed")
-            raise RuntimeError("mktemp failed")
-
-        return str(clone_path)
-
     async def run(self, task) -> Path:
-        clone_path = await self.mktemp(task) if self.dir is None else self.dir
+        if self.dir:
+            clone_path = self.dir
+        else:
+            mktemp = tempfile(directory=True)
+            clone_path = str(await mktemp.run(task))
+            self._cleanup = mktemp.cleanup
 
         program: tuple[str, ...] = ("git", "clone", self.repo, clone_path)
         task.running(" ".join(program))
@@ -115,9 +106,9 @@ class clone(MarkTenAction):
         return Path(clone_path)
 
     async def cleanup(self) -> None:
-        # Temporary directory will be automatically cleaned up by the OS, so
-        # there is no need for us to do anything
-        return
+        # Do cleanup if required
+        if self._cleanup is not None:
+            await self._cleanup()
 
 
 class checkout(MarkTenAction):
