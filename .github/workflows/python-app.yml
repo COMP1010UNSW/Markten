@@ -92,6 +92,6 @@ jobs:
         key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
     - run: poetry --version
     - run: poetry install
-    - name: Lint with mypy
+    - name: Type-check with mypy
       run: |
-        poetry run mypy .
+        poetry run mypy
