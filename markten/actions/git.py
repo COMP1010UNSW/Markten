@@ -88,6 +88,8 @@ class clone(MarkTenAction):
         if self.branch:
             program = (
                 "git",
+                "-C",
+                clone_path,
                 "checkout",
                 "-b",
                 self.branch,
@@ -166,6 +168,8 @@ class checkout(MarkTenAction):
     async def run(self, task) -> None:
         program: tuple[str, ...] = (
             "git",
+            "-C",
+            str(self.dir),
             "checkout",
             *(("-b") if self.create else ()),
             self.branch_name,
@@ -184,6 +188,8 @@ class checkout(MarkTenAction):
         if self.push_to_remote is not False:
             program = (
                 "git",
+                "-C",
+                str(self.dir),
                 "push",
                 "--set-upstream",
                 self.push_to_remote
