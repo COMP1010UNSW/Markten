@@ -6,6 +6,7 @@ Actions associated with `git` and Git repos.
 
 from logging import Logger
 from pathlib import Path
+from typing import Any
 
 from markten.__spinners import SpinnerTask
 from markten.__utils import TextCollector
@@ -215,3 +216,71 @@ class checkout(MarkTenAction):
             f"branch {self.branch_name}"
             + " and pushed to remote" if self.push_to_remote else ""
         )
+
+
+class add(MarkTenAction):
+    """
+    Perform a `git add` operation on an existing repository.
+    """
+
+    def __init__(
+        self,
+        dir: Path,
+        files: list[Path] | None = None,
+        /,
+        all: bool = False,
+    ) -> None:
+        """Perform a `git add` operation
+
+        This stages the given list of changes, making them ready to commit.
+
+        If the `files` list is empty and `all` is not specified, this will have
+        no effect.
+
+        Parameters
+        ----------
+        dir : Path
+            Path to git repository.
+        files : list[Path] | None, optional
+            List of files to add, by default None, indicating that no files
+            should be added.
+        all : bool, optional
+            whether to add all modified files, by default False
+
+        Raises
+        ------
+        ValueError
+            Files were specified when `all` is `True`
+        """
+        self.dir = dir
+        self.files = files or []
+        self.all = all
+
+        if self.all and len(self.files):
+            raise ValueError(
+                "Should not specify files to commit when using the `all=True` "
+                "flag."
+            )
+
+    async def run(self, task) -> Any:
+        program: tuple[str, ...] = (
+            "git",
+            "-C",
+            str(self.dir),
+            "add",
+            *(["-a"] if self.all else map(str, self.files)),
+        )
+
+        add = await run_process(
+            program,
+            on_stderr=task.log,
+        )
+        if add:
+            error = f"git add exited with error code: {add}"
+            task.fail(error)
+            raise Exception(error)
+
+        if self.all:
+            task.succeed("Git: staged all files")
+        else:
+            task.succeed(f"Git: staged files {self.files}")
