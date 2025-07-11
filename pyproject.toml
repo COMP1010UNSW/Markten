@@ -2,10 +2,10 @@
 name = "markten"
 version = "0.4.0"
 description = "Assess your students' work with all of the delight and none of the tedium"
+authors = [{ name = "Maddy Guthridge", email = "hello@maddyguthridge.com" }]
+requires-python = ">= 3.11"
 readme = "README.md"
 license = "MIT"
-authors = [{ name = "Maddy Guthridge", email = "hello@maddyguthridge.com" }]
-
 keywords = [
     "marking",
     "auto-marker",
@@ -27,9 +27,6 @@ classifiers = [
     "Topic :: Education :: Testing",
     "Typing :: Typed",
 ]
-
-requires-python = ">= 3.11"
-
 dependencies = [
     "rich >=13.9.4, <14",
     "click >= 8.1.8, <9",
@@ -37,6 +34,8 @@ dependencies = [
     "aiosqlite (>=0.21.0,<0.22.0)",
     "humanize (>=4.12.2,<5.0.0)",
     "aiofiles (>=24.1.0,<25.0.0)",
+    # Readline support for Windows
+    "pyreadline3>=3.5.4 ; sys_platform == 'win32'",
 ]
 
 [project.urls]
@@ -44,20 +43,28 @@ repository = "https://github.com/COMP1010UNSW/MarkTen"
 "Bug Tracker" = "https://github.com/COMP1010UNSW/MarkTen/issues"
 
 [project.scripts]
-markten = 'markten.__main__:main'
+markten = "markten.__main__:main"
 
-[tool.poetry]
-include = ["py.typed"]
+[dependency-groups]
+dev = [
+    "ruff>=0.12.1,<0.13",
+    "mypy>=1.16.1,<2",
+    "pytest>=8.4.1,<9",
+    "pywin32>=308 ; sys_platform == 'win32'",
+    "types-pywin32>=308.0.0.20250128",
+    "coverage>=7.9.1,<8",
+    "jestspectation>=1.4.5,<2",
+    "types-aiofiles>=24.1.0.20250708,<25",
+]
 
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.12.1"
-mypy = "^1.16.1"
-pytest = "^8.4.1"
-pywin32 = { version = ">=308", platform = "win32" }
-types-pywin32 = ">=308.0.0.20250128"
-coverage = "^7.9.1"
-jestspectation = "^1.4.5"
-types-aiofiles = "^24.1.0.20250708"
+[build-system]
+requires = ["uv_build>=0.7.20,<0.8.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "markten"
+module-root = ""
+
 
 [tool.mypy]
 check_untyped_defs = true
@@ -81,7 +88,3 @@ select = [
     # isort
     "I",
 ]
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
