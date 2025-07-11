@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 from markten.__spinners import SpinnerTask
-from markten.actions.__action import MarkTenAction
+from markten.actions.__action_old import MarkTenAction
 
 
 class open(MarkTenAction):

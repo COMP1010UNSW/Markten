@@ -1,5 +1,5 @@
 from collections.abc import AsyncGenerator, Callable
-from typing import Any
+from typing import Any, TypeVar
 
 from markten.__recipe.step import run_to_completion, start_generator
 from markten.__spinners import SpinnerTask
@@ -15,13 +15,15 @@ corresponding values.
 * Dict values will be added to the `context` for future steps.
 """
 
-ActionGenerator = AsyncGenerator[ActionResult, None]
+ResultType = TypeVar('ResultType')
+
+ActionGenerator = AsyncGenerator[ResultType, None]
 """
 A partially-executed action -- essentially a generator function which will
 yield a new state.
 """
 
-MarktenAction = Callable[..., AsyncGenerator[ActionResult, None]]
+MarktenAction = Callable[..., ActionGenerator[ResultType]]
 """
 A Markten action is an async generator function which optionally yields a state
 to be used in future steps.
@@ -33,7 +35,9 @@ value. All other values will be ignored.
 """
 
 
-def dict_to_actions(action: dict[str, MarktenAction]) -> list[MarktenAction]:
+def dict_to_actions(
+    actions: dict[str, MarktenAction[ResultType]]
+) -> list[MarktenAction[ResultType]]:
     """Convert the given dictionary of actions into a list of actions.
 
     All the given actions will be run in parallel.
@@ -49,7 +53,7 @@ def dict_to_actions(action: dict[str, MarktenAction]) -> list[MarktenAction]:
         Each action in the dictionary as its own independent action.
     """
     result = []
-    for name, fn in action.items():
+    for name, fn in actions.items():
 
         def make_generator(name, fn):
             """

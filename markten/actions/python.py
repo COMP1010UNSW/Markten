@@ -5,7 +5,7 @@ Actions to do with Python
 import inspect
 from collections.abc import Awaitable, Callable
 
-from .__action import MarkTenAction
+from .__action_old import MarkTenAction
 
 
 class function(MarkTenAction):

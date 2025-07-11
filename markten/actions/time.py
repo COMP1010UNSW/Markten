@@ -10,7 +10,7 @@ from typing import Any
 
 from markten.__spinners import SpinnerTask
 
-from .__action import MarkTenAction
+from .__action_old import MarkTenAction
 
 
 class sleep(MarkTenAction):
