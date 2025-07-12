@@ -7,38 +7,87 @@ This is used to report the progress of tasks that run simultaneously.
 """
 
 import asyncio
-from enum import Enum
+from collections.abc import Iterable
+from itertools import count
+from math import floor
 
 from rich.console import Group, RenderableType
 from rich.live import Live
 from rich.panel import Panel
 
-SPIN_FRAMES = "|/-\\"
+# Pong spinner, adapted from https://github.com/sindresorhus/cli-spinners
+# MIT License
+SPIN_FRAMES = [
+    "▌⠂       ▌",
+    "▐⠈       ▌",
+    "▐ ⠂      ▌",
+    "▐ ⠠      ▌",
+    "▐  ⡀     ▌",
+    "▐  ⠠     ▌",
+    "▐   ⠂    ▌",
+    "▐   ⠈    ▌",
+    "▐    ⠂   ▌",
+    "▐    ⠠   ▌",
+    "▐     ⡀  ▌",
+    "▐     ⠠  ▌",
+    "▐      ⠂ ▌",
+    "▐      ⠈ ▌",
+    "▐       ⠂▌",
+    "▐       ⠠▐",
+    "▐       ⡀▌",
+    "▐      ⠠ ▌",
+    "▐      ⠂ ▌",
+    "▐     ⠈  ▌",
+    "▐     ⠂  ▌",
+    "▐    ⠠   ▌",
+    "▐    ⡀   ▌",
+    "▐   ⠠    ▌",
+    "▐   ⠂    ▌",
+    "▐  ⠈     ▌",
+    "▐  ⠂     ▌",
+    "▐ ⠠      ▌",
+    "▐ ⡀      ▌",
+    "▐⠠       ▌"
+]
 """
 Spin states to draw
 """
-SPIN_FRAME_LENGTH = 0.25
+
+SPIN_FRAME_DURATION = 0.1
 """
 How often to redraw the spinners
 """
 
+SIMPLE_SPIN_FRAMES = [
+    "/",
+    "-",
+    "\\",
+    "|",
+]
+"""
+Simple spinner frames
+"""
 
-def get_frame(i: int) -> str:
+def get_spinner_frame(frames: list[str], frame: int) -> str:
     """Returns frame number for spinner animation"""
-    return SPIN_FRAMES[i % len(SPIN_FRAMES)]
+    return frames[frame % len(frames)]
 
 
-class TaskStatus(Enum):
-    """Status of a task"""
+def get_progress_frame(progress: float, frame: int) -> str:
+    """
+    Returns a frame for a progress spinner
 
-    Setup = 0
-    """Task is being set up"""
-    Running = 1
-    """Task is running"""
-    Success = 2
-    """Task resolved successfully"""
-    Failure = 3
-    """Task resolved, but failed"""
+    Examples:
+
+        '███/ 30%  '
+        '█████| 55%'
+        '███68%|   '
+    """
+    percentage = f"{progress * 100:2.0f}%"
+    bar = "█"
+    num_bars = floor(progress * 10) or 1
+
+    spinner_frame = SIMPLE_SPIN_FRAMES
 
 
 class SpinnerTask:
@@ -115,10 +164,10 @@ class SpinnerTask:
         logs = self.__logs[-10:]
         match self.__status:
             case TaskStatus.Setup:
-                title = f"⏳  {get_frame(i)} {self.__name}{msg}"
+                title = f"⏳  {get_spinner_frame(i)} {self.__name}{msg}"
                 style = "yellow"
             case TaskStatus.Running:
-                title = f"⏱️  {get_frame(i)} {self.__name}{msg}"
+                title = f"⏱️  {get_spinner_frame(i)} {self.__name}{msg}"
                 style = "cyan"
             case TaskStatus.Success:
                 title = f"✅   {self.__name}{msg}"
@@ -197,7 +246,7 @@ class SpinnerManager:
             self.__frame += 1
             self.draw_frame()
             # Wait for the frame duration
-            await asyncio.sleep(SPIN_FRAME_LENGTH)
+            await asyncio.sleep(SPIN_FRAME_DURATION)
 
     def draw_frame(self):
         """
@@ -217,3 +266,12 @@ class SpinnerManager:
 
         panel = Panel(Group(*tasks), title=title)
         self.__live.update(panel)
+
+
+if __name__ == '__main__':
+    import time
+    for i in range(100):
+        frame = get_spinner_frame(SPIN_FRAMES, i)
+        print(f"{frame} Thinking...", end="\r")
+        time.sleep(0.1)
+
