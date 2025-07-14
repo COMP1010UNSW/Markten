@@ -1,7 +1,7 @@
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import Awaitable, Callable
 from typing import Any, TypeVar
 
-from markten.__recipe.step import run_to_completion, start_generator
+from markten.__recipe.step import call_action_with_context
 from markten.__spinners import SpinnerTask
 
 ActionResult = Any | dict[str, Any]
@@ -15,15 +15,9 @@ corresponding values.
 * Dict values will be added to the `context` for future steps.
 """
 
-ResultType = TypeVar('ResultType')
+ResultType = TypeVar("ResultType")
 
-ActionGenerator = AsyncGenerator[ResultType, None]
-"""
-A partially-executed action -- essentially a generator function which will
-yield a new state.
-"""
-
-MarktenAction = Callable[..., ActionGenerator[ResultType]]
+MarktenAction = Callable[..., Awaitable[ResultType]]
 """
 A Markten action is an async generator function which optionally yields a state
 to be used in future steps.
@@ -36,7 +30,7 @@ value. All other values will be ignored.
 
 
 def dict_to_actions(
-    actions: dict[str, MarktenAction[ResultType]]
+    actions: dict[str, MarktenAction[ResultType]],
 ) -> list[MarktenAction[ResultType]]:
     """Convert the given dictionary of actions into a list of actions.
 
@@ -67,11 +61,10 @@ def dict_to_actions(
 
             async def generator(
                 task: SpinnerTask, **kwargs
-            ) -> ActionGenerator:
+            ) -> Awaitable[dict[str, ResultType]]:
                 """The actual generator function"""
-                gen = start_generator(fn, kwargs, task)
-                yield {name: await anext(gen)}
-                await run_to_completion(gen)
+                gen = call_action_with_context(fn, kwargs, task)
+                return {name: await gen}
 
             return generator
 
