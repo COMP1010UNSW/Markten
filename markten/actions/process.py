@@ -6,23 +6,20 @@ Actions for running subprocesses
 
 import asyncio
 import signal
-from collections.abc import Callable, Coroutine
 from logging import Logger
-from typing import Any
 
-from markten.__spinners import SpinnerTask
+from markten import ActionSession
 
-from .__action import ActionGenerator
 from .__async_process import run_process
 
 log = Logger(__name__)
 
 
 async def run(
-    task: SpinnerTask,
+    task: ActionSession,
     *args: str,
     allow_exit_failure: bool = False,
-) -> ActionGenerator:
+) -> int:
     task.running()
     returncode = await run_process(
         args,
@@ -33,17 +30,14 @@ async def run(
         task.fail(f"Process exited with code {returncode}")
         raise RuntimeError("process.run: action failed")
     task.succeed()
-    yield returncode
-
-
-CleanupHook = Callable[[], Coroutine[Any, Any, Any]]
+    return returncode
 
 
 async def run_async(
-    task: SpinnerTask,
+    task: ActionSession,
     *args: str,
     exit_timeout: float = 2,
-) -> ActionGenerator:
+) -> None:
     task.running(" ".join(args))
     process = await asyncio.create_subprocess_exec(
         *args,
@@ -52,15 +46,18 @@ async def run_async(
     )
     task.succeed()
 
-    yield
+    async def cleanup():
+        # If program hasn't quit already
+        if process.returncode is None:
+            # Interrupt
+            process.send_signal(signal.SIGINT)
+            # Wait for process to exit
+            try:
+                await asyncio.wait_for(process.wait(), exit_timeout)
+            except TimeoutError:
+                process.kill()
+                log.error("Subprocess failed to exit in given timeout window")
 
-    # If program hasn't quit already
-    if process.returncode is None:
-        # Interrupt
-        process.send_signal(signal.SIGINT)
-        # Wait for process to exit
-        try:
-            await asyncio.wait_for(process.wait(), exit_timeout)
-        except TimeoutError:
-            process.kill()
-            log.error("Subprocess failed to exit in given timeout window")
+
+    task.add_teardown_hook(cleanup)
+

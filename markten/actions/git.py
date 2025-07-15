@@ -76,7 +76,6 @@ async def clone(
         task.log(" ".join(program))
         checkout = await run_process(
             program,
-            cwd=str(clone_path),
             on_stderr=task.log,
         )
         if checkout:
@@ -91,24 +90,46 @@ async def clone(
     return clone_path
 
 
-class push(MarkTenAction):
-    def __init__(
-        self,
-        dir: Path,
-        /,
-        set_upstream: bool | str = False,
-    ) -> None:
-        super().__init__()
+async def push(
+    task: ActionSession,
+    dir: Path,
+    /,
+    set_upstream: bool | str | tuple[str, str] = False,
+):
+    if not set_upstream:
+        program = ("git", "-C", str(dir), "push")
+        push = await run_process(program, on_stderr=task.log)
+        if push:
+            error = "Failed to push"
+            task.fail(error)
+            raise Exception(error)
+        else:
+            return None
+
+    if set_upstream is True:
+        remote = "origin"
+        branch = "branch"
+    elif isinstance(set_upstream, str):
+        remote = "origin"
+        branch = set_upstream
+    else:
+        remote, branch = set_upstream
+
+    program = ("git", "-C", str(dir), "push", remote, branch)
+    push = await run_process(program, on_stderr=task.log)
+    if push:
+        error = "Failed to push"
+        task.fail(error)
+        raise Exception(error)
+    else:
+        return None
 
 
-class pull(MarkTenAction):
-    def __init__(
-        self,
-        dir: Path,
-        /,
-        set_upstream: bool | str = False,
-    ) -> None:
-        super().__init__()
+async def pull(
+    task: ActionSession,
+    dir: Path,
+) -> None:
+    ...
 
 
 class checkout(MarkTenAction):
@@ -291,5 +312,5 @@ class commit(MarkTenAction):
     ) -> None: ...
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     __clone: MarktenAction = clone
