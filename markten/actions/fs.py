@@ -11,14 +11,14 @@ from aiofiles import tempfile as a_tempfile
 from markten import ActionSession, MarktenAction
 
 
-async def temp_dir(task: ActionSession) -> Path:
+async def temp_dir(action: ActionSession) -> Path:
     """Create a temporary directory, yielding its path."""
-    task.message("Creating temporary directory")
+    action.message("Creating temporary directory")
     temp_dir_cm = a_tempfile.TemporaryDirectory(prefix="markten")
 
     # Need to manually open the file, as per
     # https://github.com/Tinche/aiofiles/issues/161#issuecomment-1974852636
-    task.add_teardown_hook(lambda: temp_dir_cm.__aexit__(None, None, None))
+    action.add_teardown_hook(lambda: temp_dir_cm.__aexit__(None, None, None))
 
     file_path = await temp_dir_cm.__aenter__()
     return Path(file_path)

@@ -16,35 +16,35 @@ log = Logger(__name__)
 
 
 async def run(
-    task: ActionSession,
+    action: ActionSession,
     *args: str,
     allow_exit_failure: bool = False,
 ) -> int:
-    task.running()
+    action.running()
     returncode = await run_process(
         args,
-        on_stdout=task.log,
-        on_stderr=task.log,
+        on_stdout=action.log,
+        on_stderr=action.log,
     )
     if returncode and not allow_exit_failure:
-        task.fail(f"Process exited with code {returncode}")
+        action.fail(f"Process exited with code {returncode}")
         raise RuntimeError("process.run: action failed")
-    task.succeed()
+    action.succeed()
     return returncode
 
 
 async def run_async(
-    task: ActionSession,
+    action: ActionSession,
     *args: str,
     exit_timeout: float = 2,
 ) -> None:
-    task.running(" ".join(args))
+    action.running(" ".join(args))
     process = await asyncio.create_subprocess_exec(
         *args,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
-    task.succeed()
+    action.succeed()
 
     async def cleanup():
         # If program hasn't quit already
@@ -59,5 +59,5 @@ async def run_async(
                 log.error("Subprocess failed to exit in given timeout window")
 
 
-    task.add_teardown_hook(cleanup)
+    action.add_teardown_hook(cleanup)
 

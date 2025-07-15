@@ -13,7 +13,8 @@ from typing import NotRequired, TypedDict
 import aiosqlite
 import platformdirs
 
-from .process import run
+from markten.__action_session import ActionSession
+from markten.actions import process
 
 log = logging.getLogger(__name__)
 
@@ -29,13 +30,22 @@ class VsCodeHistoryEntry(TypedDict):
     remoteAuthority: NotRequired[str]
 
 
-def vs_code(path: Path | None = None, remove_history: bool = False):
+async def vs_code(
+    action: ActionSession,
+    path: Path | None = None,
+    remove_history: bool = False,
+):
     """
     Launch a new VS Code window at the given Path.
     """
     # -n = new window
     # -w = CLI waits for window exit
-    action = run("code", "-nw", *([str(path)] if path else []))
+    await process.run(
+        action.make_child(process.run),
+        "code",
+        "-nw",
+        *([str(path)] if path else []),
+    )
 
     # Add a hook to remove the temporary directory from VS Code's history
     async def cleanup_vscode_history():
@@ -113,5 +123,5 @@ def vs_code(path: Path | None = None, remove_history: bool = False):
             raise
 
     if remove_history and path:
-        action.register_cleanup_hook(cleanup_vscode_history)
+        action.add_teardown_hook(cleanup_vscode_history)
     return action
