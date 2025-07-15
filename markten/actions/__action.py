@@ -1,8 +1,8 @@
 from collections.abc import Awaitable, Callable
 from typing import Any, TypeVar
 
+from markten.__action_session import ActionSession
 from markten.__recipe.step import call_action_with_context
-from markten.__spinners import SpinnerTask
 
 ActionResult = Any | dict[str, Any]
 """
@@ -60,8 +60,8 @@ def dict_to_actions(
             """
 
             async def generator(
-                task: SpinnerTask, **kwargs
-            ) -> Awaitable[dict[str, ResultType]]:
+                task: ActionSession, **kwargs
+            ) -> dict[str, ResultType]:
                 """The actual generator function"""
                 gen = call_action_with_context(fn, kwargs, task)
                 return {name: await gen}

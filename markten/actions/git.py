@@ -4,15 +4,13 @@
 Actions associated with `git` and Git repos.
 """
 
-from collections.abc import Awaitable, Callable
 from logging import Logger
 from pathlib import Path
 from typing import Any
 
-from markten.__spinners import SpinnerTask
+from markten import ActionSession, MarktenAction
 from markten.actions.fs import temp_dir
 
-from .__action import ActionGenerator
 from .__async_process import run_process
 
 log = Logger(__name__)
@@ -21,13 +19,13 @@ DEFAULT_REMOTE = "origin"
 
 
 async def clone(
-    task: SpinnerTask,
+    task: ActionSession,
     repo_url: str,
     /,
     branch: str | None = None,
     fallback_to_main: bool = False,
     dir: Path | None = None,
-) -> ActionGenerator[Path]:
+) -> Path:
     """Perform a `git clone` operation.
 
     By default, this clones the project to a temporary directory.
@@ -50,7 +48,7 @@ async def clone(
     if dir:
         clone_path = dir
     else:
-        clone_path = await anext(temp_dir(task))
+        clone_path = await temp_dir(task.make_child(temp_dir))
 
     program: tuple[str, ...] = ("git", "clone", repo_url, str(clone_path))
     task.running(" ".join(program))
@@ -90,7 +88,7 @@ async def clone(
                 task.fail(error)
                 raise Exception(error)
 
-    yield clone_path
+    return clone_path
 
 
 class push(MarkTenAction):
@@ -291,3 +289,7 @@ class commit(MarkTenAction):
         push: bool = False,
         files: list[Path] | None = None,
     ) -> None: ...
+
+
+if __name__ == '__main__':
+    __clone: MarktenAction = clone

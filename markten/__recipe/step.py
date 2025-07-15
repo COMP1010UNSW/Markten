@@ -6,7 +6,6 @@ A single step within a recipe.
 
 import asyncio
 import inspect
-from collections.abc import Awaitable
 from typing import Any, TypeVar
 
 from rich.live import Live
@@ -57,14 +56,15 @@ class RecipeStep:
             spinners = SpinnerManager(
                 f"{self.__index + 1}. {self.__name}", live
             )
+            session = ActionSession(self.__name, spinners.redraw)
 
             # Now await all yielded values
             tasks: list[asyncio.Task[Any]] = []
             for action in self.__actions:
                 tasks.append(asyncio.create_task(call_action_with_context(
                     action,
-                    context,
-                    
+                    parameters | state,
+                    session.make_child(action),
                 )))
 
             # Start drawing the spinners
@@ -92,7 +92,7 @@ class RecipeStep:
                 )
 
         # Produce new state to next task
-        return state | results
+        return (state | results, session.get_teardown_hooks())
 
 
 async def call_action_with_context(

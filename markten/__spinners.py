@@ -117,14 +117,14 @@ class SpinnerTask:
         Add message to the task logs.
         """
         self.__logs.append(line.strip())
-        self.__spinners.draw_frame()
+        self.__spinners.redraw()
 
     def message(self, msg: str | None) -> None:
         """
         Set the overall status message of the task.
         """
         self.__message = msg
-        self.__spinners.draw_frame()
+        self.__spinners.redraw()
 
     def running(self, msg: str | None = None) -> None:
         """
@@ -244,11 +244,11 @@ class SpinnerManager:
         # Move the cursor to the starting position
         while True:
             self.__frame += 1
-            self.draw_frame()
+            self.redraw()
             # Wait for the frame duration
             await asyncio.sleep(SPIN_FRAME_DURATION)
 
-    def draw_frame(self):
+    def redraw(self):
         """
         Draw a frame of the spinners.
 

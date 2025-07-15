@@ -4,13 +4,14 @@
 Runner for a single permutation of a recipe.
 """
 
+from collections.abc import Awaitable
 from datetime import datetime
 from typing import Any
 
 import humanize
 
-from markten.__recipe.step import RecipeStep, run_to_completion
-from markten.actions.__action import ActionGenerator
+from markten.__action_session import TeardownHook
+from markten.__recipe.step import RecipeStep
 
 
 class RecipeRunner:
@@ -33,7 +34,6 @@ class RecipeRunner:
             print("Error while running this permutation of recipe")
             print(e)
 
-
         duration = datetime.now() - start
         perm_str = humanize.precisedelta(duration, minimum_unit="seconds")
         print(f"Permutation complete in {perm_str}")
@@ -41,18 +41,22 @@ class RecipeRunner:
     async def __do_run(self):
         """Actually run the recipe"""
         context: dict[str, Any] = {}
-        step_generators: list[ActionGenerator] = []
+        teardown: list[list[TeardownHook]] = []
 
         for step in self.__steps:
-            gen = step.run(self.__params, context)
-            context = await anext(gen)
-            step_generators.append(gen)
+            context, teardown_hooks = await step.run(self.__params, context)
+            teardown.append(teardown_hooks)
 
         # Now do clean-up in reverse order
-        for gen in reversed(step_generators):
-            # Run to completion to do clean-up
-            await run_to_completion(gen)
+        for teardown_step in reversed(teardown):
+            for hook in teardown_step:
+                await RecipeRunner.__exec_teardown_hook(hook)
 
+    @staticmethod
+    async def __exec_teardown_hook(hook: TeardownHook) -> None:
+        value = hook()
+        if isinstance(value, Awaitable):
+            await value
 
     def __show_current_params(self):
         """
