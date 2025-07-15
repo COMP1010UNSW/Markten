@@ -11,7 +11,7 @@ from typing import Any, TypeVar
 from rich.live import Live
 
 from markten.__action_session import ActionSession, TeardownHook
-from markten.__spinners import SpinnerManager
+from markten.__cli import SpinnerManager
 from markten.actions.__action import MarktenAction
 
 T = TypeVar("T")
