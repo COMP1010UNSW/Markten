@@ -85,6 +85,11 @@ def friendly_name(obj: object) -> str:
         Human-friendly name
     """
     if callable(obj):
-        return obj.__qualname__
+        mod = obj.__module__
+        name = obj.__qualname__
+        if mod in ["builtins", "__main__"]:
+            return name
+        else:
+            return f"{mod}.{name}"
     else:
         return str(obj)
