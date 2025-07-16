@@ -22,11 +22,9 @@ class RecipeStep:
     def __init__(
         self,
         index: int,
-        name: str,
         actions: list[MarktenAction],
     ) -> None:
         self.__index = index
-        self.__name = name
         self.__actions = actions
 
     async def run(
@@ -53,18 +51,28 @@ class RecipeStep:
         dict[str, Any]
             Data from this step, to use when running future steps.
         """
-        with Live(refresh_per_second=1/TIME_PER_CLI_FRAME) as live:
+        with Live(refresh_per_second=1 / TIME_PER_CLI_FRAME) as live:
             spinners = CliManager(live)
-            session = ActionSession(self.__name)
+            if len(self.__actions) > 1:
+                name: str | object = f"Step {self.__index + 1}"
+            else:
+                name = self.__actions[0]
+            session = ActionSession(name)
 
             # Now await all yielded values
             tasks: list[asyncio.Task[Any]] = []
             for action in self.__actions:
-                tasks.append(asyncio.create_task(call_action_with_context(
-                    action,
-                    parameters | state,
-                    session.make_child(action),
-                )))
+                tasks.append(
+                    asyncio.create_task(
+                        call_action_with_context(
+                            action,
+                            parameters | state,
+                            session.make_child(action)
+                            if len(self.__actions) > 1
+                            else session,
+                        )
+                    )
+                )
 
             # Start drawing the spinners
             spinner_task = asyncio.create_task(spinners.run(session))

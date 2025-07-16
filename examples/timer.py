@@ -13,6 +13,6 @@ def timer(action: ActionSession, duration: float):
     return actions.time.sleep(action, duration)
 
 
-recipe.step("wait", timer)
+recipe.step(timer)
 
 recipe.run()

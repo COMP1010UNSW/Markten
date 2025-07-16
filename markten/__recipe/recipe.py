@@ -78,7 +78,6 @@ class Recipe:
 
     def step(
         self,
-        name: str,
         *step: MarktenAction | dict[str, MarktenAction],
     ) -> None:
         """Add a step to the recipe.
@@ -95,8 +94,6 @@ class Recipe:
 
         Parameters
         ----------
-        name : str
-            Name of this step (eg "Look up student details")
         *step : MarktenAction | dict[str, MarktenAction]
             Action(s) to be run, as per the documentation above.
         """
@@ -108,7 +105,7 @@ class Recipe:
                 actions.extend(dict_to_actions(action))
             else:
                 actions.append(action)
-        self.__steps.append(RecipeStep(len(self.__steps), name, actions))
+        self.__steps.append(RecipeStep(len(self.__steps), actions))
 
     def run(self):
         """Run the marking recipe for each permutation given by the generators.

@@ -76,8 +76,8 @@ async def push(
     /,
     set_upstream: bool | str | tuple[str, str] = False,
 ):
-    if not set_upstream:
-        program = ("git", "-C", str(dir), "push")
+    if set_upstream is False:
+        program: tuple[str, ...] = ("git", "-C", str(dir), "push")
     else:
         if set_upstream is True:
             remote = DEFAULT_REMOTE
