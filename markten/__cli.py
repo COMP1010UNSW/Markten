@@ -6,6 +6,8 @@ Class for displaying multiple parallel spinners.
 This is used to report the progress of tasks that run simultaneously.
 """
 
+from collections.abc import Callable
+
 from rich.columns import Columns
 from rich.console import Group, RenderableType
 from rich.live import Live
@@ -23,12 +25,13 @@ PARTIAL_OUTPUT_LINES = 10
 
 
 def action_status(action: ActionInfo) -> RenderableType:
+    # Need weird spacing to make things line up due to emoji annoyance
     if action.status == ActionStatus.Running:
-        return Spinner("dots")
+        return Spinner("dots", " ")
     elif action.status == ActionStatus.Failure:
-        return Text("❌")
+        return Text("❌ ")
     else:  # ActionStatus.Success
-        return Text("✅")
+        return Text("✅ ")
 
 
 def action_title(action: ActionInfo) -> RenderableType:
@@ -57,16 +60,17 @@ def draw_action_partial(action: ActionInfo) -> RenderableType:
 
     # Brief overview of child actions
     children = [
-        Padding.indent(draw_action_brief(child), INDENT_MULTIPLIER)
+        Padding.indent(
+            draw_action(child, draw_action_brief), INDENT_MULTIPLIER
+        )
         for child in action.children
     ]
 
     return Group(
         header,
-        Padding.indent(latest_logs, INDENT_MULTIPLIER),
         *children,
+        Padding.indent(latest_logs, INDENT_MULTIPLIER),
     )
-
 
 
 def draw_action_full(action: ActionInfo) -> RenderableType:
@@ -81,16 +85,22 @@ def draw_action_full(action: ActionInfo) -> RenderableType:
 
     return Group(
         header,
-        Padding.indent(latest_logs, INDENT_MULTIPLIER),
         *children,
+        Padding.indent(latest_logs, INDENT_MULTIPLIER),
     )
 
 
-def draw_action(action: ActionInfo) -> RenderableType:
+def draw_action(
+    action: ActionInfo,
+    drawer: Callable[[ActionInfo], RenderableType] = draw_action_partial,
+) -> RenderableType:
+    """
+    Draw action output, choosing output verbosity based on status
+    """
     if action.status == ActionStatus.Failure:
         return draw_action_full(action)
     else:
-        return draw_action_partial(action)
+        return drawer(action)
 
 
 class CliManager:
@@ -98,6 +108,7 @@ class CliManager:
 
     Responsible for displaying output during the execution of a recipe step.
     """
+
     def __init__(self, live: Live) -> None:
         self.__live = live
         self.__should_stop = False
