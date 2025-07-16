@@ -89,7 +89,10 @@ class RecipeStep:
                 except Exception as e:
                     task_errors.append(e)
 
-            session.succeed()
+            if len(task_errors):
+                session.fail()
+            else:
+                session.succeed()
             # Stop spinners
             spinners.stop()
             await spinner_task
@@ -132,7 +135,7 @@ async def call_action_with_context(
     kwargs_used = args[2] is not None
     if kwargs_used:
         # If so, pass the full namespace
-        ret = await fn(**namespace)
+        promise = fn(**namespace)
     else:
         # Otherwise, only pass the args it requests
         named_args = args[0]
@@ -141,11 +144,17 @@ async def call_action_with_context(
             for name, value in namespace.items()
             if name in named_args
         }
-        ret = await fn(**param_subset)
-    # Succeed if not done already
-    if not action.is_resolved():
-        action.succeed()
-    return ret
+        promise = fn(**param_subset)
+
+    try:
+        ret = await promise
+        # Succeed if not done already
+        if not action.is_resolved():
+            action.succeed()
+        return ret
+    except:
+        action.fail()
+        raise
 
 
 def dict_to_actions(
