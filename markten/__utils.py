@@ -6,6 +6,7 @@ Utility functions.
 
 import os
 from pathlib import Path
+from types import FunctionType
 from typing import Any
 
 from rich.console import Console
@@ -84,7 +85,7 @@ def friendly_name(obj: object) -> str:
     str
         Human-friendly name
     """
-    if callable(obj):
+    if isinstance(obj, FunctionType | type):
         mod = obj.__module__
         name = obj.__qualname__
         if mod in ["builtins", "__main__"]:
