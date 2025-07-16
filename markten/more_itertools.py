@@ -1,13 +1,14 @@
+import asyncio
 from collections.abc import (
+    AsyncGenerator,
     AsyncIterable,
     AsyncIterator,
     Callable,
-    Generator,
     Iterable,
     Iterator,
-    Mapping,
 )
-from typing import Any, Generic, TypeVar
+from time import time
+from typing import Generic, NoReturn, TypeVar
 
 T = TypeVar("T")
 
@@ -91,35 +92,15 @@ class RegenerateIterable(Generic[T]):
         return self.__generator()
 
 
-def recursive_generator(
-    keys: list[str],
-    params_dict: Mapping[str, Iterable[Any]],
-) -> Generator[dict[str, Any], None, None]:
-    """
-    Recursively iterate over the given keys, producing a dict of values.
-    """
-    keys_head = keys[0]
-    # Base case: this is the last remaining key
-    if len(keys) == 1:
-        for value in params_dict[keys_head]:
-            yield {keys_head: value}
-        return
+async def hourglass(interval: float) -> AsyncGenerator[None, NoReturn]:
+    """Async iterable that yields a `None` at the given interval.
 
-    # Recursive case, other keys remain, and we need to iterate over those too
-    keys_tail = keys[1:]
-
-    for value in params_dict[keys_head]:
-        # Iterate over remaining keys
-        for current_params in recursive_generator(keys_tail, params_dict):
-            # Overall keys is the union of the current key-value pair with
-            # the params yielded by the recursion
-            yield {keys_head: value} | current_params
-
-
-def dict_permutations_iterator(
-    params: Mapping[str, Iterable[Any]],
-) -> Generator[dict[str, Any], None, None]:
+    Parameters
+    ----------
+    interval : float
+        Time interval in seconds
     """
-    Iterate over all possible parameter values provided by the generators.
-    """
-    return recursive_generator(list(params.keys()), params)
+    while True:
+        t_before_yield = time()
+        yield None
+        await asyncio.sleep(interval - (time() - t_before_yield))

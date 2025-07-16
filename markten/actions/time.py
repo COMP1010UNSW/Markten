@@ -6,50 +6,34 @@ Actions for managing timing
 
 import asyncio
 import time
-from typing import Any
 
-from markten.__spinners import SpinnerTask
-
-from .__action import MarkTenAction
+from markten.__action_session import ActionSession
 
 
-class sleep(MarkTenAction):
+async def sleep(action: ActionSession, duration: float) -> None:
+    """Pause execution for the given duration.
+
+    Equivalent to a `time.sleep()` call, but without blocking other
+    actions.
+
+    Parameters
+    ----------
+    duration : float
+        Time to pause, in seconds.
     """
-    Action that waits for the given amount of time.
-    """
+    action.running()
 
-    def __init__(self, duration: float) -> None:
-        """Pause execution for the given duration.
+    start_time = time.time()
+    now = time.time()
 
-        Equivalent to a `time.sleep()` call, but without blocking other
-        actions.
-
-        Parameters
-        ----------
-        duration : float
-            Time to pause, in seconds.
-        """
-        self.duration = duration
-
-    def get_name(self) -> str:
-        return f"sleep {self.duration}"
-
-    async def run(self, task: SpinnerTask) -> Any:
-        task.running()
-
-        start_time = time.time()
+    while now - start_time < duration:
+        # Give a countdown
+        remaining = duration - (now - start_time)
+        action.message(f"{round(remaining)}s remaining...")
+        if remaining > 1:
+            await asyncio.sleep(1)
+        else:
+            await asyncio.sleep(remaining)
         now = time.time()
 
-        while now - start_time < self.duration:
-            # Give a countdown
-            remaining = self.duration - (now - start_time)
-            task.message(f"{round(remaining)}s remaining...")
-            if remaining > 1:
-                await asyncio.sleep(1)
-            else:
-                await asyncio.sleep(remaining)
-            now = time.time()
-
-        task.succeed("0s remaining")
-
-    async def cleanup(self) -> None: ...
+    action.succeed("0s remaining")

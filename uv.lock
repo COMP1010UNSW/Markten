@@ -142,7 +142,7 @@ wheels = [
 
 [[package]]
 name = "markten"
-version = "0.4.0"
+version = "1.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },
@@ -174,7 +174,7 @@ requires-dist = [
     { name = "humanize", specifier = ">=4.12.2,<5.0.0" },
     { name = "platformdirs", specifier = ">=4.3.6,<5.0.0" },
     { name = "pyreadline3", marker = "sys_platform == 'win32'", specifier = ">=3.5.4" },
-    { name = "rich", specifier = ">=13.9.4,<14" },
+    { name = "rich", specifier = ">=13.9.4,<15" },
 ]
 
 [package.metadata.requires-dev]

@@ -1,53 +1,26 @@
+from collections.abc import Awaitable, Callable
+from typing import Any, TypeVar
+
+ActionResult = Any | dict[str, Any]
 """
-# MarkTen / actions / action
+Result from a Markten action.
 
-Base class for MarkTen actions.
+Either a single value or a dict mapping from parameter names to their
+corresponding values.
+
+* Single values with no name will be discarded if used directly as a step.
+* Dict values will be added to the `context` for future steps.
 """
 
-from abc import abstractmethod
-from typing import Any, Protocol, runtime_checkable
+ResultType = TypeVar("ResultType")
 
-from markten.__spinners import SpinnerTask
+MarktenAction = Callable[..., Awaitable[ResultType]]
+"""
+A Markten action is an async generator function which optionally yields a state
+to be used in future steps.
 
-
-@runtime_checkable
-class MarkTenAction(Protocol):
-    """
-    An action object, which executes the given action.
-
-    These objects are used by MarkTen to handle running a task, and performing
-    any required cleanup afterwards.
-    """
-
-    @abstractmethod
-    def get_name(self) -> str:
-        """
-        Returns the name to use for the action.
-        """
-
-    @abstractmethod
-    async def run(self, task: SpinnerTask) -> Any:
-        """
-        Run the action.
-
-        This should perform setup for the action. Its resultant awaitable
-        should resolve once the setup is complete.
-
-        It can also use the `task` object to display progress for the task and
-        log any required output.
-
-        The awaited result may be used as a parameter for future steps. For
-        example, the `git.clone` action gives the path to the temporary
-        directory cloned.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    async def cleanup(self) -> None:
-        """
-        Clean up after the recipe has been run, performing any required
-        tear-down.
-
-        The resultant awaitable should resolve once the tear-down is complete.
-        """
-        raise NotImplementedError
+It is called, with the `anext` function being used to execute the action. Once
+the function evaluates, it should yield a new state. Any required clean-up
+should be written after this `yield`. The generator should only `yield` one
+value. All other values will be ignored.
+"""

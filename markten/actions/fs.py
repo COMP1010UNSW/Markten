@@ -4,51 +4,22 @@
 Actions associated with the file system.
 """
 
-from collections.abc import Awaitable, Callable
 from pathlib import Path
 
 from aiofiles import tempfile as a_tempfile
 
-from .__action import MarkTenAction
+from markten import ActionSession
 
 
-class tempfile(MarkTenAction):
-    """
-    Create a temporary file or directory.
-    """
+async def temp_dir(action: ActionSession) -> Path:
+    """Create a temporary directory, yielding its path."""
+    action.message("Creating temporary directory")
+    temp_dir_cm = a_tempfile.TemporaryDirectory(prefix="markten")
 
-    def __init__(self, /, directory: bool = False) -> None:
-        """Create a temporary file or directory, yielding its name.
+    # Need to manually open the file, as per
+    # https://github.com/Tinche/aiofiles/issues/161#issuecomment-1974852636
+    action.add_teardown_hook(lambda: temp_dir_cm.__aexit__(None, None, None))
 
-        _extended_summary_
-
-        Parameters
-        ----------
-        directory : bool, optional
-            _description_, by default False
-        """
-        self.directory = directory
-        self.file = None
-        """Reference to temporary file"""
-        self._close: None | Callable[[], Awaitable[None]] = None
-
-    def get_name(self) -> str:
-        return "tempfile"
-
-    async def run(self, task) -> Path:
-        if self.directory:
-            task.message("Creating temporary directory")
-            self.file = await a_tempfile.TemporaryDirectory(prefix="markten")  # type: ignore
-            # Intentionally ignoring type errors -- they'll go away when I
-            # rewrite to use async generators
-            self._close = self.file.close  # type: ignore
-        else:
-            task.message("Creating temporary directory")
-            self.file = await a_tempfile.NamedTemporaryFile(prefix="markten")  # type: ignore
-
-        return Path(str(self.file.name))  # type: ignore
-
-    async def cleanup(self) -> None:
-        if self._close is not None:
-            await self._close()
-            self._close = None
+    file_path = await temp_dir_cm.__aenter__()
+    action.succeed(file_path)
+    return Path(file_path)

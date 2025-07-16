@@ -6,6 +6,7 @@ Utility functions.
 
 import os
 from pathlib import Path
+from types import FunctionType
 from typing import Any
 
 from rich.console import Console
@@ -66,3 +67,30 @@ class TextCollector:
 
     def __str__(self) -> str:
         return "\n".join(self.__output).strip()
+
+
+def friendly_name(obj: object) -> str:
+    """Returns a "human-friendly" name for an object
+
+    * For a function or class, this is the qualified name
+    * For anything else, it's the regular string
+
+    Parameters
+    ----------
+    obj : object
+        object to get name of
+
+    Returns
+    -------
+    str
+        Human-friendly name
+    """
+    if isinstance(obj, FunctionType | type):
+        mod = obj.__module__
+        name = obj.__qualname__
+        if mod in ["builtins", "__main__"]:
+            return name
+        else:
+            return f"{mod}.{name}"
+    else:
+        return str(obj)

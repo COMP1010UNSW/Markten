@@ -14,14 +14,14 @@ under the hood to make even the most annoying workflows trivial.
 ```bash
 $ pip install markten
 ...
-Successfully installed markten-0.4.0
+Successfully installed markten-1.0.0
 ```
 
 Or to install in an independent environment, you can use `pipx` or `uv`:
 
 ```bash
 $ pipx install markten
-  installed package markten 0.4.0, installed using Python 3.12.6
+  installed package markten 1.0.0, installed using Python 3.12.6
   These apps are now globally available
     - markten
 done! ✨ 🌟 ✨
@@ -32,7 +32,7 @@ Installed 10 packages in 11ms
  + click==8.2.1
  + humanize==4.12.3
  + markdown-it-py==3.0.0
- + markten==0.4.0
+ + markten==1.0.0
  + mdurl==0.1.2
  + platformdirs==4.3.8
  + pygments==2.19.1
@@ -65,7 +65,7 @@ Define your recipe parameters. For example, this recipe takes in git repo names
 from stdin.
 
 ```py
-from markten import Recipe, parameters, actions
+from markten import Recipe, ActionSession, parameters, actions
 
 marker = Recipe("Clone COMP1010 repos")
 
@@ -75,27 +75,28 @@ marker.parameter("repo", parameters.stdin("Repo name"))
 Write simple marking recipes by defining simple functions for each step.
 
 ```py
-# Functions can take arbitrary parameters
-def setup(repo: str):
+# Functions can take arbitrary parameters, as long as those parameters were
+# defined earlier in the script
+async def setup(action: ActionSession, repo: str):
     """Set up marking environment"""
     # Clone the given git repo to a temporary directory
-    directory = actions.git.clone(f"git@github.com:COMP1010UNSW/{repo}.git")
+    directory = await actions.git.clone(action, f"git@github.com:COMP1010UNSW/{repo}.git")
     return {
         "directory": directory,
     }
 
-marker.step("Clone repo", setup)
+marker.step(setup)
 ```
 
-The parameters returned by your previous steps can be used in later steps, just
+The values returned by your previous steps can be used in later steps, just
 by giving the function parameters the same name.
 
 ```py
-def open_code(directory: Path):
+def open_code(action: ActionSession, directory: Path):
     """Open the cloned git repo in VS Code"""
-    return actions.editor.vs_code(directory)
+    return actions.editor.vs_code(action, directory)
 
-marker.step("View in VS Code", open_code)
+marker.step(open_code)
 ```
 
 Then run the recipe. It'll run for every permutation of your parameters, making
