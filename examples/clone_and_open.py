@@ -40,6 +40,7 @@ def open_code(action: ActionSession, directory: Path):
 
 def print_student_info(action: ActionSession, zid: str):
     """Look up student info"""
+    action.set_verbose()
     return actions.process.run(action, "ssh", "cse", "acc", zid)
 
 

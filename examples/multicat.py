@@ -7,18 +7,23 @@ Demonstrates the difference between `repeat_values` flags for the `stdin`
 parameter generator.
 """
 
-from markten import Recipe, actions, parameters
+from markten import Recipe, parameters
 
 recipe = Recipe("cat")
 
-recipe.parameter("line1", parameters.stdin("line1", repeat_values=False))
-recipe.parameter("line2", parameters.stdin("line2", repeat_values=True))
+recipe.parameter(
+    "no_repeat", parameters.stdin("no_repeat value", repeat_values=False)
+)
+recipe.parameter(
+    "repeat", parameters.stdin("repeat value", repeat_values=True)
+)
 
 
-def cat(line1, line2):
-    return actions.python.function(lambda: print(line1, line2))
+async def cat(no_repeat, repeat):
+    print("no_repeat:", no_repeat)
+    print("repeat:", repeat)
 
 
-recipe.step("display", cat)
+recipe.step(cat)
 
 recipe.run()

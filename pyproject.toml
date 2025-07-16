@@ -68,7 +68,7 @@ module-root = ""
 
 [tool.mypy]
 check_untyped_defs = true
-files = ["markten", "tests"]
+files = ["markten", "tests", "examples"]
 
 [tool.ruff]
 line-length = 79
