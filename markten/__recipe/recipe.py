@@ -6,6 +6,7 @@ Overall recipe class
 
 import asyncio
 import inspect
+import os
 import traceback
 from collections.abc import Iterable, Mapping
 from datetime import datetime
@@ -20,12 +21,14 @@ from markten.__recipe.runner import RecipeRunner
 from markten.__recipe.step import RecipeStep, dict_to_actions
 from markten.actions.__action import MarktenAction
 
+DEFAULT_VERBOSITY = int(os.getenv("MARKTEN_VERBOSITY", "0"))
+
 
 class Recipe:
     def __init__(
         self,
         recipe_name: str,
-        verbose: int = 0,
+        verbose: int = DEFAULT_VERBOSITY,
     ) -> None:
         """
         Create a MarkTen Recipe
@@ -40,6 +43,7 @@ class Recipe:
             Name of the recipe
         verbose : int
             Logging verbosity. Higher numbers will produce more-verbose output.
+            Defaults to 'MARKTEN_VERBOSITY' environment variable.
         """
         # Determine caller's module to show in debug info
         # https://stackoverflow.com/a/13699329/6335363

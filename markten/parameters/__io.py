@@ -1,7 +1,6 @@
 import readline
 
 from rich.console import Console
-from rich.prompt import Prompt
 
 from markten.more_itertools import RegenerateIterable, ReuseIterable
 
@@ -16,7 +15,7 @@ def stdin(param_name: str, repeat_values: bool = False):
     def generator():
         try:
             while True:
-                value = Prompt.ask(f"Enter [cyan]{param_name}[/]")
+                value = console.input(f"Enter [cyan]{param_name}[/]: ")
                 readline.add_history(value)
                 yield value
         except EOFError:
