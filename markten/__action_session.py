@@ -152,6 +152,8 @@ class ActionSession:
         If `None`, no message is shown, and the previous message is discarded.
         """
         self.__message = msg
+        if msg is not None:
+            self.log(msg)
 
     def running(self, msg: str | None = None) -> None:
         """

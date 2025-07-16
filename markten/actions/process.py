@@ -20,7 +20,7 @@ async def run(
     *args: str,
     allow_exit_failure: bool = False,
 ) -> int:
-    action.running()
+    action.running(" ".join(args))
     returncode = await run_process(
         args,
         on_stdout=action.log,
