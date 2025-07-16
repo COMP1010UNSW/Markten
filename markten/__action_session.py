@@ -34,6 +34,7 @@ class ActionInfo:
     progress: float | None
     children: list['ActionInfo']
     output: list[str]
+    verbose: bool
 
 
 class ActionSession:
@@ -67,6 +68,9 @@ class ActionSession:
         """Child tasks"""
 
         self.__teardown_hooks: list[TeardownHook] = []
+
+        self.__verbose = False
+        """Whether task should always show full output regardless of status"""
 
     def add_teardown_hook(self, hook: TeardownHook):
         """Register a teardown hook, which will be called during the clean-up
@@ -125,6 +129,19 @@ class ActionSession:
         child = ActionSession(name)
         self.__children.append(child)
         return child
+
+    def set_verbose(self, new_value: bool = True) -> None:
+        """Set verbosity for this action's output.
+
+        This can be used to make actions always show output, regardless of
+        failure or success.
+
+        Parameters
+        ----------
+        new_value : bool, optional
+            New verbose value, by default True
+        """
+        self.__verbose = new_value
 
     def log(self, line: str) -> None:
         """
@@ -201,4 +218,5 @@ class ActionSession:
             self.__progress,
             [child.display() for child in self.__children],
             self.__output,
+            self.__verbose,
         )

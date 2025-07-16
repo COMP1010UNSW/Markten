@@ -97,7 +97,7 @@ def draw_action(
     """
     Draw action output, choosing output verbosity based on status
     """
-    if action.status == ActionStatus.Failure:
+    if action.verbose or action.status == ActionStatus.Failure:
         return draw_action_full(action)
     else:
         return drawer(action)
