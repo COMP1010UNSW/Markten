@@ -6,11 +6,13 @@ Overall recipe class
 
 import asyncio
 import inspect
+import traceback
 from collections.abc import Iterable, Mapping
 from datetime import datetime
 from typing import Any
 
 import humanize
+from rich import print
 
 from markten import __utils as utils
 from markten.__recipe.parameters import ParameterManager
@@ -23,6 +25,7 @@ class Recipe:
     def __init__(
         self,
         recipe_name: str,
+        verbose: int = 0,
     ) -> None:
         """
         Create a MarkTen Recipe
@@ -35,6 +38,8 @@ class Recipe:
         ----------
         recipe_name : str
             Name of the recipe
+        verbose : int
+            Logging verbosity. Higher numbers will produce more-verbose output.
         """
         # Determine caller's module to show in debug info
         # https://stackoverflow.com/a/13699329/6335363
@@ -44,6 +49,7 @@ class Recipe:
         self.__name = recipe_name
         self.__params = ParameterManager()
         self.__steps: list[RecipeStep] = []
+        self.__verbose = verbose
 
     def parameter(self, name: str, values: Iterable[Any]) -> None:
         """Add a single parameter to the recipe.
@@ -113,7 +119,18 @@ class Recipe:
         This begins the `asyncio` event loop, and so cannot be called from
         async code.
         """
-        asyncio.run(self.async_run())
+        try:
+            asyncio.run(self.async_run())
+        except KeyboardInterrupt as e:
+            print()
+            print("[bold red]Interrupted[/]")
+            if self.__verbose >= 1:
+                traceback.print_exception(e)
+            else:
+                print(
+                    "To show stack trace, set recipe verbosity to a value >= 1"
+                )
+            print("Goodbye!")
 
     async def async_run(self):
         """Run the marking recipe for each permutation given by the generators.

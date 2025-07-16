@@ -12,4 +12,4 @@ constantly remember to update it).
 
 
 TIME_PER_CLI_FRAME = 0.03
-"""10 FPS"""
+"""30 FPS"""
