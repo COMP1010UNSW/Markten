@@ -7,7 +7,7 @@ from pathlib import Path
 
 from markten import ActionSession, Recipe, actions, parameters
 
-term = "25T1"
+term = "25T2"
 
 
 def command_line():
