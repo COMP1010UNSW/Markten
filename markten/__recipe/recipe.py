@@ -6,7 +6,7 @@ Overall recipe class
 
 import asyncio
 import inspect
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import datetime
 from typing import Any
 
@@ -62,7 +62,7 @@ class Recipe:
         """
         self.__params.add(name, values)
 
-    def parameters(self, parameters: dict[str, Iterable[Any]]) -> None:
+    def parameters(self, parameters: Mapping[str, Iterable[Any]]) -> None:
         """Add a collection of parameters for the recipe.
 
         This should be a dictionary where each key is the name of a parameter,

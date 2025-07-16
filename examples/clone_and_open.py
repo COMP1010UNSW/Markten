@@ -5,7 +5,7 @@ Clone and open a bunch of students' work by reading student IDs from stdin.
 from argparse import ArgumentParser
 from pathlib import Path
 
-from markten import Recipe, actions, parameters
+from markten import ActionSession, Recipe, actions, parameters
 
 term = "25T1"
 
@@ -18,9 +18,10 @@ def command_line():
     return parameters.from_object(parser.parse_args(), ["lab"])
 
 
-def setup(lab: str, zid: str):
+async def setup(action: ActionSession, lab: str, zid: str):
     """Set up lab exercise"""
-    directory = actions.git.clone(
+    directory = await actions.git.clone(
+        action,
         f"git@nw-syd-gitlab.cseunsw.tech:COMP2511/{term}/students/{zid}/{
             lab
         }.git",
@@ -32,14 +33,14 @@ def setup(lab: str, zid: str):
     }
 
 
-def open_code(directory: Path):
+def open_code(action: ActionSession, directory: Path):
     """Open directory in VS Code"""
-    return actions.editor.vs_code(directory, remove_history=True)
+    return actions.editor.vs_code(action, directory, remove_history=True)
 
 
-def print_student_info(zid: str):
+def print_student_info(action: ActionSession, zid: str):
     """Look up student info"""
-    return actions.process.run("ssh", "cse", "acc", zid)
+    return actions.process.run(action, "ssh", "cse", "acc", zid)
 
 
 marker = Recipe("COMP2511 Lab Marking")
@@ -47,8 +48,8 @@ marker = Recipe("COMP2511 Lab Marking")
 marker.parameter("zid", parameters.stdin("zid"))
 marker.parameters(command_line())
 
-marker.step("setup repo", setup)
-marker.step("view code", (open_code, print_student_info))
+marker.step(setup)
+marker.step(open_code, print_student_info)
 
 if __name__ == "__main__":
     marker.run()
