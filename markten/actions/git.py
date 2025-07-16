@@ -51,17 +51,19 @@ async def clone(
 
     program: tuple[str, ...] = ("git", "clone", repo_url, str(clone_path))
 
-    await process.run(action.make_child(process.run), *program)
+    await process.run(action, *program)
 
     if branch:
+        checkout_action = action.make_child(checkout)
         try:
             await checkout(
-                action.make_child(checkout),
+                checkout_action,
                 clone_path,
                 branch,
                 create=True,
             )
-        except Exception:
+        except Exception as e:
+            checkout_action.fail(str(e))
             if fallback_to_main:
                 action.log("Note: remaining on main branch")
             else:
@@ -92,12 +94,12 @@ async def push(
 
         program = ("git", "-C", str(dir), "push", remote, branch)
 
-    await process.run(action.make_child(process.run), *program)
+    await process.run(action, *program)
 
 
 async def pull(action: ActionSession, dir: Path) -> None:
     program = ("git", "-C", str(dir), "pull")
-    await process.run(action.make_child(process.run), *program)
+    await process.run(action, *program)
 
 
 async def checkout(
@@ -141,7 +143,7 @@ async def checkout(
         *(("-b") if create else ()),
         branch_name,
     )
-    await process.run(action.make_child(process.run), *program)
+    await process.run(action, *program)
 
     if push_to_remote is not False:
         await push(action.make_child(push), dir, set_upstream=push_to_remote)
@@ -200,7 +202,7 @@ async def add(
         *(["-a"] if all else map(str, files)),
     )
 
-    await process.run(action.make_child(process.run), *program)
+    await process.run(action, *program)
 
     if all:
         action.succeed("Git: staged all files")
@@ -221,7 +223,7 @@ async def commit(
         await add(action.make_child(add), dir, files, all=all)
 
     await process.run(
-        action.make_child(process.run),
+        action,
         "git",
         "-C",
         str(dir),
