@@ -66,3 +66,25 @@ class TextCollector:
 
     def __str__(self) -> str:
         return "\n".join(self.__output).strip()
+
+
+def friendly_name(obj: object) -> str:
+    """Returns a "human-friendly" name for an object
+
+    * For a function or class, this is the qualified name
+    * For anything else, it's the regular string
+
+    Parameters
+    ----------
+    obj : object
+        object to get name of
+
+    Returns
+    -------
+    str
+        Human-friendly name
+    """
+    if callable(obj):
+        return obj.__qualname__
+    else:
+        return str(obj)

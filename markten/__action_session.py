@@ -9,6 +9,8 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from enum import Enum
 
+from markten.__utils import friendly_name
+
 TeardownHook = Callable[[], Awaitable[None] | None]
 """Callback function for cleaning up after an action has completed."""
 
@@ -49,7 +51,7 @@ class ActionSession:
             Name of this action. If an object is given, its name will be used
             (if it is a function or class).
         """
-        self.__name = name if isinstance(name, str) else str(name)
+        self.__name = name if isinstance(name, str) else friendly_name(name)
         # TODO: Get pretty name of object
 
         self.__status = ActionStatus.Running
