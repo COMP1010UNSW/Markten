@@ -37,6 +37,7 @@ class RecipeRunner:
         duration = datetime.now() - start
         perm_str = humanize.precisedelta(duration, minimum_unit="seconds")
         print(f"Permutation complete in {perm_str}")
+        print()
 
     async def __do_run(self):
         """Actually run the recipe"""

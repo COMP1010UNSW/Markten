@@ -1,11 +1,14 @@
+import asyncio
 from collections.abc import (
+    AsyncGenerator,
     AsyncIterable,
     AsyncIterator,
     Callable,
     Iterable,
     Iterator,
 )
-from typing import Generic, TypeVar
+from time import time
+from typing import Generic, NoReturn, TypeVar
 
 T = TypeVar("T")
 
@@ -87,3 +90,17 @@ class RegenerateIterable(Generic[T]):
 
     def __iter__(self) -> Iterator[T]:
         return self.__generator()
+
+
+async def hourglass(interval: float) -> AsyncGenerator[None, NoReturn]:
+    """Async iterable that yields a `None` at the given interval.
+
+    Parameters
+    ----------
+    interval : float
+        Time interval in seconds
+    """
+    while True:
+        t_before_yield = time()
+        yield None
+        await asyncio.sleep(interval - (time() - t_before_yield))

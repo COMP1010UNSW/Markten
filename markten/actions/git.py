@@ -7,7 +7,7 @@ Actions associated with `git` and Git repos.
 from logging import Logger
 from pathlib import Path
 
-from markten import ActionSession, MarktenAction
+from markten import ActionSession
 from markten.__utils import TextCollector
 from markten.actions import fs, process
 from markten.actions.__async_process import run_process
@@ -240,13 +240,3 @@ async def current_branch(action: ActionSession, dir: Path) -> str:
     await run_process(program, on_stdout=output)
     action.succeed()
     return str(output).strip()
-
-
-if __name__ == "__main__":
-    __clone: MarktenAction = clone
-    __push: MarktenAction = push
-    __pull: MarktenAction = pull
-    __checkout: MarktenAction = checkout
-    __add: MarktenAction = add
-    __commit: MarktenAction = commit
-    __current_branch: MarktenAction = current_branch

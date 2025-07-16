@@ -11,8 +11,9 @@ from typing import Any, TypeVar
 from rich.live import Live
 
 from markten.__action_session import ActionSession, TeardownHook
-from markten.__cli import SpinnerManager
-from markten.actions.__action import MarktenAction
+from markten.__cli import CliManager
+from markten.__consts import TIME_PER_CLI_FRAME
+from markten.actions.__action import MarktenAction, ResultType
 
 T = TypeVar("T")
 
@@ -52,11 +53,9 @@ class RecipeStep:
         dict[str, Any]
             Data from this step, to use when running future steps.
         """
-        with Live() as live:
-            spinners = SpinnerManager(
-                f"{self.__index + 1}. {self.__name}", live
-            )
-            session = ActionSession(self.__name, spinners.redraw)
+        with Live(refresh_per_second=1/TIME_PER_CLI_FRAME) as live:
+            spinners = CliManager(live)
+            session = ActionSession(self.__name)
 
             # Now await all yielded values
             tasks: list[asyncio.Task[Any]] = []
@@ -68,7 +67,7 @@ class RecipeStep:
                 )))
 
             # Start drawing the spinners
-            spinner_task = asyncio.create_task(spinners.spin())
+            spinner_task = asyncio.create_task(spinners.run(session))
             # Now wait for all tasks to resolve
             results: dict[str, Any] = {}
             task_errors: list[Exception] = []
@@ -82,8 +81,10 @@ class RecipeStep:
                 except Exception as e:
                     task_errors.append(e)
 
+            session.succeed()
             # Stop spinners
-            spinner_task.cancel()
+            spinners.stop()
+            await spinner_task
 
             if len(task_errors):
                 raise ExceptionGroup(
@@ -137,3 +138,47 @@ async def call_action_with_context(
     if not action.is_resolved():
         action.succeed()
     return ret
+
+
+def dict_to_actions(
+    actions: dict[str, MarktenAction[ResultType]],
+) -> list[MarktenAction[ResultType]]:
+    """Convert the given dictionary of actions into a list of actions.
+
+    All the given actions will be run in parallel.
+
+    Parameters
+    ----------
+    action : dict[str, MarktenAction]
+        Action dictionary
+
+    Returns
+    -------
+    list[MarktenAction]
+        Each action in the dictionary as its own independent action.
+    """
+    result = []
+    for name, fn in actions.items():
+
+        def make_generator(name, fn):
+            """
+            Make the generator function.
+
+            Needed to capture the `name` and `fn` loop variables, else they
+            will end up being the last value of the iteration.
+
+            https://docs.astral.sh/ruff/rules/function-uses-loop-variable/
+            """
+
+            async def generator(
+                task: ActionSession, **kwargs
+            ) -> dict[str, ResultType]:
+                """The actual generator function"""
+                gen = call_action_with_context(fn, kwargs, task)
+                return {name: await gen}
+
+            return generator
+
+        result.append(make_generator(name, fn))
+
+    return result

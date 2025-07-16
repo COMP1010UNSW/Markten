@@ -36,11 +36,7 @@ class ActionInfo:
 
 class ActionSession:
 
-    def __init__(
-        self,
-        name: str | object,
-        redraw: Callable[[], None],
-    ) -> None:
+    def __init__(self, name: str | object) -> None:
         """Create an ActionSession object.
 
         You shouldn't call this directly unless you intend to display the data
@@ -52,12 +48,7 @@ class ActionSession:
         name : str | object
             Name of this action. If an object is given, its name will be used
             (if it is a function or class).
-        redraw : Callable[[], None]
-            Redraw callback function. This gets called whenever the output
-            should be redrawn.
         """
-        self.__redraw = redraw
-
         self.__name = name if isinstance(name, str) else str(name)
         # TODO: Get pretty name of object
 
@@ -129,7 +120,7 @@ class ActionSession:
         ActionSession
             Child task
         """
-        child = ActionSession(name, self.__redraw)
+        child = ActionSession(name)
         self.__children.append(child)
         return child
 
@@ -141,7 +132,6 @@ class ActionSession:
         process or debugging info.
         """
         self.__output.append(line.strip())
-        self.__redraw()
 
     def progress(self, progress: float | None) -> None:
         """
@@ -160,7 +150,6 @@ class ActionSession:
         If `None`, no message is shown, and the previous message is discarded.
         """
         self.__message = msg
-        self.__redraw()
 
     def running(self, msg: str | None = None) -> None:
         """

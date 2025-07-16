@@ -15,11 +15,8 @@ import humanize
 from markten import __utils as utils
 from markten.__recipe.parameters import ParameterManager
 from markten.__recipe.runner import RecipeRunner
-from markten.__recipe.step import RecipeStep
-from markten.actions.__action import (
-    MarktenAction,
-    dict_to_actions,
-)
+from markten.__recipe.step import RecipeStep, dict_to_actions
+from markten.actions.__action import MarktenAction
 
 
 class Recipe:

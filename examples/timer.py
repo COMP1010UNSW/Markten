@@ -1,7 +1,7 @@
 """
 Simple timer example
 """
-from markten import Recipe, actions, parameters
+from markten import ActionSession, Recipe, actions, parameters
 
 recipe = Recipe("timer")
 
@@ -9,8 +9,8 @@ recipe = Recipe("timer")
 recipe.parameter("duration", map(float, parameters.stdin("duration")))
 
 
-def timer(duration: float):
-    return actions.time.sleep(duration)
+def timer(action: ActionSession, duration: float):
+    return actions.time.sleep(action, duration)
 
 
 recipe.step("wait", timer)

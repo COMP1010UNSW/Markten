@@ -8,7 +8,7 @@ from pathlib import Path
 
 from aiofiles import tempfile as a_tempfile
 
-from markten import ActionSession, MarktenAction
+from markten import ActionSession
 
 
 async def temp_dir(action: ActionSession) -> Path:
@@ -22,7 +22,3 @@ async def temp_dir(action: ActionSession) -> Path:
 
     file_path = await temp_dir_cm.__aenter__()
     return Path(file_path)
-
-
-if __name__ == '__main__':
-    __temp_dir: MarktenAction = temp_dir
