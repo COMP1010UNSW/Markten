@@ -140,7 +140,7 @@ async def checkout(
         "-C",
         str(dir),
         "checkout",
-        *(("-b") if create else ()),
+        *(("-b",) if create else ()),
         branch_name,
     )
     await process.run(action, *program)
