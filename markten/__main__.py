@@ -4,13 +4,14 @@
 Programmatic entrypoint to MarkTen, allowing it to be run as a script.
 """
 
-import logging
 import runpy
 import sys
 
 import click
 from rich.console import Console
 from rich.panel import Panel
+
+from markten.__context import get_context
 
 from . import __consts as consts
 
@@ -24,8 +25,9 @@ help_text = """
 Usage: [bold magenta]markten [OPTIONS] RECIPE [ARGS]...[/]
 
 Options:
-  [yellow]--version[/]  Show the version and exit.
-  [yellow]--help[/]     Show this message and exit.
+  [yellow]-v, --verbose[/]  Increase the verbosity of markten's output.
+  [yellow]--version[/]      Show the version and exit.
+  [yellow]--help[/]         Show this message and exit.
 
 [bold yellow]RECIPE[/]: Recipe program to execute.
 
@@ -45,16 +47,6 @@ def show_help(ctx: click.Context, param: click.Option, value: bool):
     ctx.exit()
 
 
-def handle_verbose(verbose: int):
-    mappings = {
-        0: "CRITICAL",
-        1: "WARNING",
-        2: "INFO",
-        3: "DEBUG",
-    }
-    logging.basicConfig(level=mappings.get(verbose, "DEBUG"))
-
-
 @click.command("markten", help=help_text)
 @click.option(
     "--help",
@@ -63,12 +55,13 @@ def handle_verbose(verbose: int):
     expose_value=False,
     is_eager=True,
 )
-@click.option("-v", "--verbose", count=True)
+@click.option("-v", "--verbose", count=True, envvar=consts.VERBOSE_ENV_VAR)
 @click.argument("recipe", type=click.Path(exists=True, readable=True))
 @click.argument("args", nargs=-1)
 @click.version_option(consts.VERSION)
 def main(recipe: str, args: tuple[str, ...], verbose: int = 0):
-    handle_verbose(verbose)
+    # Set verbosity
+    get_context().verbosity = verbose
     # replace argv
     sys.argv = [sys.argv[0], *args]
     # Then run code as main

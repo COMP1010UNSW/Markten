@@ -16,6 +16,7 @@ import humanize
 from rich import print
 
 from markten import __utils as utils
+from markten.__context import get_context
 from markten.__recipe.parameters import ParameterManager
 from markten.__recipe.runner import RecipeRunner
 from markten.__recipe.step import RecipeStep, dict_to_actions
@@ -28,7 +29,7 @@ class Recipe:
     def __init__(
         self,
         recipe_name: str,
-        verbose: int = DEFAULT_VERBOSITY,
+        verbose: int | None = None,
     ) -> None:
         """
         Create a MarkTen Recipe
@@ -43,7 +44,7 @@ class Recipe:
             Name of the recipe
         verbose : int
             Logging verbosity. Higher numbers will produce more-verbose output.
-            Defaults to 'MARKTEN_VERBOSITY' environment variable.
+            Defaults to verbosity level set using CLI.
         """
         # Determine caller's module to show in debug info
         # https://stackoverflow.com/a/13699329/6335363
@@ -128,7 +129,7 @@ class Recipe:
         except KeyboardInterrupt as e:
             print()
             print("[bold red]Interrupted[/]")
-            if self.__verbose >= 1:
+            if (self.__verbose or get_context().verbosity) >= 1:
                 traceback.print_exception(e)
             else:
                 print(
