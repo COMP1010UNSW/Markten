@@ -17,8 +17,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          # Latest compatible Python
-          python-version-file: "pyproject.toml"
+          # Pinned Python version
+          python-version-file: ".python-version"
       - name: Build package
         run: uv build
       - name: Publish package

@@ -152,6 +152,7 @@ dependencies = [
     { name = "platformdirs" },
     { name = "pyreadline3", marker = "sys_platform == 'win32'" },
     { name = "rich" },
+    { name = "typing-extensions" },
 ]
 
 [package.dev-dependencies]
@@ -175,6 +176,7 @@ requires-dist = [
     { name = "platformdirs", specifier = ">=4.3.6,<5.0.0" },
     { name = "pyreadline3", marker = "sys_platform == 'win32'", specifier = ">=3.5.4" },
     { name = "rich", specifier = ">=13.9.4,<15" },
+    { name = "typing-extensions", specifier = ">=4.12.2" },
 ]
 
 [package.metadata.requires-dev]

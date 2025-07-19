@@ -74,8 +74,8 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        # Latest compatible Python
-        python-version-file: "pyproject.toml"
+        # Pinned Python version
+        python-version-file: ".python-version"
     - name: Install uv
       uses: astral-sh/setup-uv@v6
       with:
@@ -92,8 +92,8 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        # Latest compatible Python
-        python-version-file: "pyproject.toml"
+        # Pinned Python version
+        python-version-file: ".python-version"
     - name: Install uv
       uses: astral-sh/setup-uv@v6
       with:
