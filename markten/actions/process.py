@@ -6,7 +6,11 @@ Actions for running subprocesses
 
 import asyncio
 import signal
+import subprocess
+import sys
 from logging import Logger
+from typing import Any
+from warnings import deprecated
 
 from markten import ActionSession
 
@@ -20,6 +24,23 @@ async def run(
     *args: str,
     allow_exit_failure: bool = False,
 ) -> int:
+    """Run the given process, and wait for it to exit before resolving.
+
+    Parameters
+    ----------
+    action : ActionSession
+        Action session
+    *args : str
+        Program to execute.
+    allow_exit_failure : bool, optional
+        Whether to fail the action if the process exits with a non-zero status
+        code, by default False
+
+    Returns
+    -------
+    int
+        Subprocess's exit code.
+    """
     action.running(" ".join(args))
     returncode = await run_process(
         args,
@@ -27,17 +48,32 @@ async def run(
         on_stderr=action.log,
     )
     if returncode and not allow_exit_failure:
-        action.fail(f"Process exited with code {returncode}")
-        raise RuntimeError("process.run: action failed")
+        raise RuntimeError(f"Process exited with code {returncode}")
     action.succeed()
     return returncode
 
 
-async def run_async(
+async def run_in_background(
     action: ActionSession,
     *args: str,
     exit_timeout: float = 2,
 ) -> None:
+    """Run the given process in the background, only killing it during the
+    tear-down phase.
+
+    This is useful for actions such as spinning up a web server for the
+    duration of marking.
+
+    Parameters
+    ----------
+    action : ActionSession
+        Action session context.
+    *args : str
+        Program to execute.
+    exit_timeout : float, optional
+        Number of seconds to wait after interrupting process with SIGINT before
+        forcefully killing it using SIGKILL, by default 2.
+    """
     action.running(" ".join(args))
     process = await asyncio.create_subprocess_exec(
         *args,
@@ -59,3 +95,48 @@ async def run_async(
                 log.error("Subprocess failed to exit in given timeout window")
 
     action.add_teardown_hook(cleanup)
+
+
+run_async = deprecated("Use `run_in_background` instead")(run_in_background)
+
+
+async def run_detached(
+    action: ActionSession,
+    *args: str,
+) -> None:
+    """Run the given process, but detach it such that it won't exit, even after
+    the markten recipe finishes.
+
+    This is useful for launching GUI applications when you don't want to kill
+    them when finishing a recipe permutation.
+
+    Parameters
+    ----------
+    action : ActionSession
+        Action session.
+    *args : str
+        Program to execute.
+    """
+    action.running(" ".join(args))
+
+    if sys.platform == "win32":
+        # On Windows, we need a specific subprocess flag
+        # Need to type it as `dict[str, Any]` or mypy freaks out
+        options: dict[str, Any] = {
+            # https://stackoverflow.com/a/78852901/6335363
+            "creationflags": subprocess.DETACHED_PROCESS,
+        }
+    else:
+        # Assume system is unix-y
+        options: dict[str, Any] = {
+            # https://stackoverflow.com/a/64145368/6335363
+            "start_new_session": True,
+        }
+
+    subprocess.Popen(
+        args,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        **options,
+    )
+    action.succeed()
