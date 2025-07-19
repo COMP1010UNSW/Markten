@@ -1,5 +1,5 @@
 """
-# MarkTen / Actions / git.py
+# Markten / Actions / git.py
 
 Actions associated with `git` and Git repos.
 """
@@ -132,7 +132,7 @@ async def checkout(
 
     if push_to_remote is not None and not create:
         raise ValueError(
-            "MarkTen.actions.git.checkout: Cannot specify "
+            "Markten.actions.git.checkout: Cannot specify "
             "`push_to_remote` if `create is False`"
         )
     program: tuple[str, ...] = (

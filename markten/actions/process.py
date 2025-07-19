@@ -1,5 +1,5 @@
 """
-# MarkTen / Actions / process.py
+# Markten / Actions / process.py
 
 Actions for running subprocesses
 """
@@ -58,6 +58,4 @@ async def run_async(
                 process.kill()
                 log.error("Subprocess failed to exit in given timeout window")
 
-
     action.add_teardown_hook(cleanup)
-

@@ -39,8 +39,8 @@ dependencies = [
 ]
 
 [project.urls]
-repository = "https://github.com/COMP1010UNSW/MarkTen"
-"Bug Tracker" = "https://github.com/COMP1010UNSW/MarkTen/issues"
+repository = "https://github.com/COMP1010UNSW/Markten"
+"Bug Tracker" = "https://github.com/COMP1010UNSW/Markten/issues"
 
 [project.scripts]
 markten = "markten.__main__:main"

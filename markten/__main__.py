@@ -1,7 +1,7 @@
 """
-# MarkTen / Main
+# Markten / Main
 
-Programmatic entrypoint to MarkTen, allowing it to be run as a script.
+Programmatic entrypoint to Markten, allowing it to be run as a script.
 """
 
 import runpy
@@ -17,7 +17,7 @@ from . import __consts as consts
 
 console = Console()
 
-title = f"MarkTen - v{consts.VERSION}"
+title = f"Markten - v{consts.VERSION}"
 
 help_text = f"""
 ✅  Assess your students' work with all of the [green]delight[/] and none of the [red]tedium[/]
@@ -37,8 +37,8 @@ Options:
 
 Made with [magenta]<3[/] by Maddy Guthridge
 
-View the project on GitHub: [cyan]https://github.com/COMP1010UNSW/MarkTen[/]
-View the documentation: [cyan]https://github.com/COMP1010UNSW/MarkTen[/]
+View the project on GitHub: [cyan]https://github.com/COMP1010UNSW/Markten[/]
+View the documentation: [cyan]https://github.com/COMP1010UNSW/Markten[/]
 """.strip()  # noqa: E501
 
 

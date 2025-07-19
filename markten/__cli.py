@@ -1,5 +1,5 @@
 """
-# MarkTen / Spinner
+# Markten / Spinner
 
 Class for displaying multiple parallel spinners.
 

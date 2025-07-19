@@ -1,5 +1,5 @@
 """
-# MarkTen / Actions / editor.py
+# Markten / Actions / editor.py
 
 Actions associated with text editors
 """

@@ -1,5 +1,5 @@
 """
-# MarkTen / Parameters / FS
+# Markten / Parameters / FS
 
 Gather parameters from the file system.
 """

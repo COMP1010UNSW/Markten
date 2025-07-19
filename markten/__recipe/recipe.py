@@ -32,9 +32,9 @@ class Recipe:
         verbose: int | None = None,
     ) -> None:
         """
-        Create a MarkTen Recipe
+        Create a Markten Recipe
 
-        A recipe is the framework for building a MarkTen script. After creating
+        A recipe is the framework for building a Markten script. After creating
         the recipe, you can add parameters and steps to it, in order to specify
         how to execute the task.
 
@@ -94,8 +94,8 @@ class Recipe:
         """Add a step to the recipe.
 
         The step can be a variety of types:
-        * A single `MarkTenAction` function
-        * A dictionary of `MarkTenAction` functions. The yielded values of the
+        * A single `MarktenAction` function
+        * A dictionary of `MarktenAction` functions. The yielded values of the
           actions will be stored as parameters for future steps using the name
           in the dictionary key.
         * Multiple of the above, as separate parameters

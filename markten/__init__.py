@@ -1,8 +1,9 @@
 """
-# MarkTen
+# Markten
 
 A manual marking automation framework.
 """
+
 # Intentionally disable import sorting so that we don't get circular import
 # annoyance for importing common types such as `ActionSession`
 from .__action_session import ActionSession  # noqa: I001
@@ -14,11 +15,11 @@ from .actions import MarktenAction
 from . import actions, parameters
 
 __all__ = [
-    'ActionSession',
-    'MarktenAction',
-    'Recipe',
-    'actions',
-    'get_context',
-    'parameters',
-    '__version__',
+    "ActionSession",
+    "MarktenAction",
+    "Recipe",
+    "actions",
+    "get_context",
+    "parameters",
+    "__version__",
 ]

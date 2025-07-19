@@ -1,5 +1,5 @@
 """
-# MarkTen / Actions / web browser
+# Markten / Actions / web browser
 
 Actions associated with web browsers
 """

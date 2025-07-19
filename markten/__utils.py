@@ -1,5 +1,5 @@
 """
-# MarkTen / Utils
+# Markten / Utils
 
 Utility functions.
 """
@@ -49,7 +49,7 @@ def recipe_banner(
     if recipe_file:
         text.append(f"File: [cyan]{relativize_file(Path(recipe_file))}[/]")
 
-    panel = Panel("\n".join(text), title=f"MarkTen v{consts.VERSION}")
+    panel = Panel("\n".join(text), title=f"Markten v{consts.VERSION}")
     console.print(panel)
 
 
