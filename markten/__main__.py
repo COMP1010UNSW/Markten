@@ -21,11 +21,15 @@ title = f"MarkTen - v{consts.VERSION}"
 help_text = """
 ✅  Assess your students' work with all of the [green]delight[/] and none of the [red]tedium[/]
 
-Usage: [bold cyan]markten [OPTIONS] RECIPE [ARGS]...[/]
+Usage: [bold magenta]markten [OPTIONS] RECIPE [ARGS]...[/]
 
 Options:
   [yellow]--version[/]  Show the version and exit.
   [yellow]--help[/]     Show this message and exit.
+
+[bold yellow]RECIPE[/]: Recipe program to execute.
+
+[bold yellow][ARGS][/]: Additional program arguments, passed to recipe program.
 
 Made with [magenta]<3[/] by Maddy Guthridge
 
