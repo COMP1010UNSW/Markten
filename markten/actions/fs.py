@@ -7,6 +7,7 @@ Actions associated with the file system.
 from pathlib import Path
 
 import aiofiles
+import aiofiles.ospath
 from aiofiles import tempfile as a_tempfile
 
 from markten import ActionSession
@@ -26,10 +27,38 @@ async def temp_dir(action: ActionSession) -> Path:
     return Path(file_path)
 
 
-async def write_file(action: ActionSession, file: Path, text: str) -> None:
+async def write_file(
+    action: ActionSession,
+    file: Path,
+    text: str,
+    /,
+    overwrite: bool = False,
+) -> None:
+    """Write the given text into the given file.
+
+    Unlike standard file management functions, this raises an exception if the
+    file already exists, unless the `overwrite` option is given.
+
+    Parameters
+    ----------
+    action : ActionSession
+        Action session
+    file : Path
+        File to write into
+    text : str
+        Text to write
+    overwrite : bool, optional
+        Whether to overwrite the file if it already exists, by default False
+
+    Raises
+    ------
+    FileExistsError
+        File already exists.
     """
-    Write the given text into the given file.
-    """
+    if await aiofiles.ospath.exists(file) and not overwrite:
+        raise FileExistsError(
+            f"Cannot write into '{file}' as it already exists"
+        )
     action.message("Writing text to file")
     async with aiofiles.open(file) as f:
         await f.write(text)
