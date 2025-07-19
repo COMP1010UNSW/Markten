@@ -8,8 +8,10 @@ import subprocess
 import sys
 
 from markten.__action_session import ActionSession
+from markten.actions.__action import markten_action
 
 
+@markten_action
 async def open(
     action: ActionSession,
     url: str,

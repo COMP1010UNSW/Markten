@@ -16,12 +16,14 @@ from warnings import deprecated
 from markten import ActionSession
 from markten.__utils import TextCollector
 from markten.actions import fs
+from markten.actions.__action import markten_action
 
 from .__async_process import run_process
 
 log = Logger(__name__)
 
 
+@markten_action
 async def run(
     action: ActionSession,
     *args: str,
@@ -56,6 +58,7 @@ async def run(
     return returncode
 
 
+@markten_action
 async def run_stdout(
     action: ActionSession,
     *args: str,
@@ -90,6 +93,7 @@ async def run_stdout(
     return str(stdout)
 
 
+@markten_action
 async def run_in_background(
     action: ActionSession,
     *args: str,
@@ -156,6 +160,7 @@ async def run_in_background(
 run_async = deprecated("Use `run_in_background` instead")(run_in_background)
 
 
+@markten_action
 async def run_detached(
     action: ActionSession,
     *args: str,

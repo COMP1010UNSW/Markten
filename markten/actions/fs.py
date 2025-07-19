@@ -11,8 +11,10 @@ import aiofiles.ospath
 from aiofiles import tempfile as a_tempfile
 
 from markten import ActionSession
+from markten.actions.__action import markten_action
 
 
+@markten_action
 async def temp_dir(action: ActionSession) -> Path:
     """Create a temporary directory, yielding its path."""
     action.message("Creating temporary directory")
@@ -27,6 +29,7 @@ async def temp_dir(action: ActionSession) -> Path:
     return Path(file_path)
 
 
+@markten_action
 async def write_file(
     action: ActionSession,
     file: Path,
@@ -64,6 +67,7 @@ async def write_file(
         await f.write(text)
 
 
+@markten_action
 async def read_file(action: ActionSession, file: Path) -> str:
     """Read text from the given file.
 

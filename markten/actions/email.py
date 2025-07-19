@@ -5,6 +5,7 @@ Actions for composing emails
 """
 
 from markten import ActionSession
+from markten.actions.__action import markten_action
 
 from .__misc import open
 
@@ -33,6 +34,7 @@ def __make_params(params: dict[str, str | None]) -> str:
     )
 
 
+@markten_action
 async def compose(
     action: ActionSession,
     to: str | list[str],

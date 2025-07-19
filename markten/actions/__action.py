@@ -24,3 +24,12 @@ A Markten action is an async function which accepts an `ActionSession`, as well
 as (optionally) other parameters. It can use this `ActionSession` to register
 teardown hooks, and to create child actions.
 """
+
+
+def markten_action(action: MarktenAction) -> MarktenAction:
+    """Decorator to assert that a function satisfies the action type
+    definition.
+
+    This performs no validation, but can be used to increase type safety.
+    """
+    return action

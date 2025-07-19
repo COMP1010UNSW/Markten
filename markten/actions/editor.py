@@ -15,6 +15,7 @@ import platformdirs
 
 from markten.__action_session import ActionSession
 from markten.actions import process
+from markten.actions.__action import markten_action
 
 log = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ class VsCodeHistoryEntry(TypedDict):
     remoteAuthority: NotRequired[str]
 
 
+@markten_action
 async def vs_code(
     action: ActionSession,
     path: Path | None = None,

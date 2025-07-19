@@ -8,8 +8,10 @@ import asyncio
 import time
 
 from markten.__action_session import ActionSession
+from markten.actions.__action import markten_action
 
 
+@markten_action
 async def sleep(action: ActionSession, duration: float) -> None:
     """Pause execution for the given duration.
 

@@ -9,8 +9,10 @@ from pathlib import Path
 
 from markten import ActionSession
 from markten.actions import process
+from markten.actions.__action import markten_action
 
 
+@markten_action
 async def open(action: ActionSession, file_or_url: str | Path) -> None:
     """
     Opens the given file or URL in the user's preferred application for

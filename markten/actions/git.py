@@ -10,6 +10,7 @@ from pathlib import Path
 from markten import ActionSession
 from markten.__utils import TextCollector
 from markten.actions import fs, process
+from markten.actions.__action import markten_action
 from markten.actions.__async_process import run_process
 
 log = Logger(__name__)
@@ -17,6 +18,7 @@ log = Logger(__name__)
 DEFAULT_REMOTE = "origin"
 
 
+@markten_action
 async def clone(
     action: ActionSession,
     repo_url: str,
@@ -72,6 +74,7 @@ async def clone(
     return clone_path
 
 
+@markten_action
 async def push(
     action: ActionSession,
     dir: Path,
@@ -97,11 +100,13 @@ async def push(
     await process.run(action, *program)
 
 
+@markten_action
 async def pull(action: ActionSession, dir: Path) -> None:
     program = ("git", "-C", str(dir), "pull")
     await process.run(action, *program)
 
 
+@markten_action
 async def checkout(
     action: ActionSession,
     dir: Path,
@@ -156,6 +161,7 @@ async def checkout(
     )
 
 
+@markten_action
 async def add(
     action: ActionSession,
     dir: Path,
@@ -210,6 +216,7 @@ async def add(
         action.succeed(f"Git: staged files {files}")
 
 
+@markten_action
 async def commit(
     action: ActionSession,
     dir: Path,
@@ -236,6 +243,7 @@ async def commit(
         await push(action.make_child(push), dir)
 
 
+@markten_action
 async def current_branch(action: ActionSession, dir: Path) -> str:
     program = ("git", "-C", str(dir), "rev-parse", "--abbrev-ref", "HEAD")
     output = TextCollector()
