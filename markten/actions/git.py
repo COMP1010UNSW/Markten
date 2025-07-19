@@ -199,7 +199,7 @@ async def add(
         "-C",
         str(dir),
         "add",
-        *(["-a"] if all else map(str, files)),
+        *(["--all"] if all else map(str, files)),
     )
 
     await process.run(action, *program)
