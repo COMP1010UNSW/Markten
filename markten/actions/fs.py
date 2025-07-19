@@ -59,6 +59,28 @@ async def write_file(
         raise FileExistsError(
             f"Cannot write into '{file}' as it already exists"
         )
-    action.message("Writing text to file")
-    async with aiofiles.open(file) as f:
+    action.message(f"Writing {file}")
+    async with aiofiles.open(file, "w") as f:
         await f.write(text)
+
+
+async def read_file(action: ActionSession, file: Path) -> str:
+    """Read text from the given file.
+
+    Returns the text as a `str`.
+
+    Parameters
+    ----------
+    action : ActionSession
+        Action session
+    file : Path
+        File to read from.
+
+    Returns
+    -------
+    str
+        File contents.
+    """
+    action.message(f"Read {file}")
+    async with aiofiles.open(file) as f:
+        return await f.read()
