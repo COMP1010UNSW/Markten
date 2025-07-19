@@ -13,6 +13,16 @@ from markten.actions import fs, process
 from markten.actions.__action import markten_action
 from markten.actions.__async_process import run_process
 
+__all__ = [
+    "clone",
+    "push",
+    "pull",
+    "checkout",
+    "add",
+    "commit",
+    "current_branch",
+]
+
 log = Logger(__name__)
 
 DEFAULT_REMOTE = "origin"

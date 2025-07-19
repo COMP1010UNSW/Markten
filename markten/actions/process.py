@@ -20,6 +20,14 @@ from markten.actions.__action import markten_action
 
 from .__async_process import run_process
 
+__all__ = [
+    "run",
+    "stdout_of",
+    "run_in_background",
+    "run_async",
+    "run_detached"
+]
+
 log = Logger(__name__)
 
 
@@ -59,7 +67,7 @@ async def run(
 
 
 @markten_action
-async def run_stdout(
+async def stdout_of(
     action: ActionSession,
     *args: str,
     allow_exit_failure: bool = False,
@@ -136,7 +144,7 @@ async def run_in_background(
         stderr=f_stderr,
     )
 
-    async def cleanup():
+    async def teardown():
         # If program hasn't quit already
         if process.returncode is None:
             # Interrupt
@@ -152,7 +160,7 @@ async def run_in_background(
         f_stdout.close()
         f_stderr.close()
 
-    action.add_teardown_hook(cleanup)
+    action.add_teardown_hook(teardown)
 
     return stdout, stderr
 

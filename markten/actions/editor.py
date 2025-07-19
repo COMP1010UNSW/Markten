@@ -17,6 +17,10 @@ from markten.__action_session import ActionSession
 from markten.actions import process
 from markten.actions.__action import markten_action
 
+__all__ = [
+    "vs_code",
+]
+
 log = logging.getLogger(__name__)
 
 

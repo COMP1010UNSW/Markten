@@ -9,6 +9,10 @@ from markten.actions.__action import markten_action
 
 from .__misc import open
 
+__all__ = [
+    "compose",
+]
+
 __encoding_replacements = {
     # % needs to appear first, or we will double-encode everything
     "%": "%25",

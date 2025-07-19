@@ -10,6 +10,10 @@ import time
 from markten.__action_session import ActionSession
 from markten.actions.__action import markten_action
 
+__all__ = [
+    "sleep",
+]
+
 
 @markten_action
 async def sleep(action: ActionSession, duration: float) -> None:

@@ -10,6 +10,10 @@ import sys
 from markten.__action_session import ActionSession
 from markten.actions.__action import markten_action
 
+__all__ = [
+    "open",
+]
+
 
 @markten_action
 async def open(
