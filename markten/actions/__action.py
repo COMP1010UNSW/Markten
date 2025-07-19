@@ -1,5 +1,9 @@
 from collections.abc import Awaitable, Callable
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
+
+from markten.__action_session import ActionSession
+
+P = ParamSpec('P')
 
 ActionResult = Any | dict[str, Any]
 """
@@ -14,13 +18,9 @@ corresponding values.
 
 ResultType = TypeVar("ResultType")
 
-MarktenAction = Callable[..., Awaitable[ResultType]]
+MarktenAction = Callable[Concatenate[ActionSession, P], Awaitable[ResultType]]
 """
-A Markten action is an async generator function which optionally yields a state
-to be used in future steps.
-
-It is called, with the `anext` function being used to execute the action. Once
-the function evaluates, it should yield a new state. Any required clean-up
-should be written after this `yield`. The generator should only `yield` one
-value. All other values will be ignored.
+A Markten action is an async function which accepts an `ActionSession`, as well
+as (optionally) other parameters. It can use this `ActionSession` to register
+teardown hooks, and to create child actions.
 """
