@@ -3,7 +3,7 @@
 
 Actions associated with `git` and Git repos.
 """
-from .__git import add, checkout, clone, commit, current_branch
+from .__git import add, checkout, clone, commit, current_branch, pull, push
 
 __all__ = [
     "add",
@@ -11,4 +11,6 @@ __all__ = [
     "clone",
     "commit",
     "current_branch",
+    "pull",
+    "push",
 ]
