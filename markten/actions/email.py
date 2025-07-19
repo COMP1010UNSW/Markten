@@ -4,11 +4,33 @@
 Actions for composing emails
 """
 
-from urllib.parse import urlencode
-
 from markten import ActionSession
 
 from .__misc import open
+
+__encoding_replacements = {
+    # % needs to appear first, or we will double-encode everything
+    "%": "%25",
+    '"': "%22",
+    " ": "%20",
+    "\n": "%0D%0A",
+    "?": "%3F",
+    "&": "%26",
+}
+
+
+def __replace_all(s: str) -> str:
+    for original, replacement in __encoding_replacements.items():
+        s = s.replace(original, replacement)
+    return s
+
+
+def __make_params(params: dict[str, str | None]) -> str:
+    return "&".join(
+        f"{key}={__replace_all(value)}"
+        for key, value in params.items()
+        if value is not None
+    )
 
 
 async def compose(
@@ -38,13 +60,14 @@ async def compose(
     Implementation based on RFC6086
     https://www.rfc-editor.org/rfc/rfc6068
     """
+    # TODO: Support attachments, eg by using `xdg-email` command on Linux.
     if isinstance(to, list):
         to = ",".join(to)
 
     if isinstance(cc, list):
         cc = ",".join(cc)
 
-    options = urlencode(
+    options = __make_params(
         {
             "cc": cc,
             "subject": subject,
