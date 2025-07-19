@@ -8,7 +8,6 @@ This is used to report the progress of tasks that run simultaneously.
 
 from collections.abc import Callable
 
-from rich.columns import Columns
 from rich.console import Group, RenderableType
 from rich.live import Live
 from rich.padding import Padding
@@ -24,17 +23,17 @@ INDENT_MULTIPLIER = 2
 PARTIAL_OUTPUT_LINES = 10
 
 
-def action_status(action: ActionInfo) -> RenderableType:
+def action_status(action: ActionInfo, title: Text) -> RenderableType:
     # Need weird spacing to make things line up due to emoji annoyance
     if action.status == ActionStatus.Running:
-        return Spinner("dots", " ")
+        return Spinner("dots", title)
     elif action.status == ActionStatus.Failure:
-        return Text("❌ ")
+        return Text.assemble("❌ ", title, overflow="ellipsis", no_wrap=True)
     else:  # ActionStatus.Success
-        return Text("✅ ")
+        return Text.assemble("✅ ", title, overflow="ellipsis", no_wrap=True)
 
 
-def action_title(action: ActionInfo) -> RenderableType:
+def action_title(action: ActionInfo) -> Text:
     if action.status == ActionStatus.Running:
         return Text(action.name, style="cyan")
     elif action.status == ActionStatus.Failure:
@@ -44,14 +43,18 @@ def action_title(action: ActionInfo) -> RenderableType:
 
 
 def draw_action_brief(action: ActionInfo) -> RenderableType:
-    return Columns(
-        [
-            action_status(action),
-            " - ",
-            action_title(action),
-            *((" - ", action.message) if action.message else ()),
-        ]
+    rest = Text.assemble(
+        " - ",
+        action_title(action),
+        *((" - ", action.message) if action.message else ()),
+        # For some reason, despite these preferences, Rich really wants to wrap
+        # this across multiple lines. It used to be worse, but with much
+        # experimentation this is about as good as I've managed to make it.
+        # https://github.com/Textualize/rich/discussions/3801
+        overflow="ellipsis",
+        no_wrap=True,
     )
+    return action_status(action, rest)
 
 
 def draw_action_partial(action: ActionInfo) -> RenderableType:
