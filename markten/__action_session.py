@@ -8,11 +8,16 @@ create child actions.
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from enum import Enum
+from typing import Concatenate, ParamSpec, TypeVar
 
 from markten.__utils import friendly_name
 
 TeardownHook = Callable[[], Awaitable[None] | None]
 """Callback function for cleaning up after an action has completed."""
+
+
+P = ParamSpec('P')
+T = TypeVar('T')
 
 
 class ActionStatus(Enum):
@@ -108,8 +113,35 @@ class ActionSession:
         hooks.extend(reversed(self.__teardown_hooks))
         return hooks
 
+    def child(
+        self,
+        action: Callable[Concatenate['ActionSession', P], T],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> T:
+        """Register and immediately execute a child action
+
+        This handles the complexity of making a child action and then calling
+        it.
+
+        Parameters
+        ----------
+        action : MarktenAction
+            Action function to execute as a child of this action session.
+
+        Returns
+        -------
+        T
+            Return of the given action.
+        """
+        child_session = self.make_child(action)
+        return action(child_session, *args, **kwargs)
+
     def make_child(self, name: str | object) -> 'ActionSession':
-        """Create a child action of this action
+        """Create a child action of this action.
+
+        It's probably simpler to use `ActionSession.child` to create and
+        execute the child action immediately.
 
         Used to indicate when a sub-action is required for the completion of
         this action. The action will not be called automatically, but the
