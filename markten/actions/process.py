@@ -9,10 +9,12 @@ import signal
 import subprocess
 import sys
 from logging import Logger
+from pathlib import Path
 from typing import Any
 from warnings import deprecated
 
 from markten import ActionSession
+from markten.actions import fs
 
 from .__async_process import run_process
 
@@ -57,7 +59,7 @@ async def run_in_background(
     action: ActionSession,
     *args: str,
     exit_timeout: float = 2,
-) -> None:
+) -> tuple[Path, Path]:
     """Run the given process in the background, only killing it during the
     tear-down phase.
 
@@ -73,14 +75,27 @@ async def run_in_background(
     exit_timeout : float, optional
         Number of seconds to wait after interrupting process with SIGINT before
         forcefully killing it using SIGKILL, by default 2.
+
+    Returns
+    -------
+    tuple[Path, Path]
+        File paths for stdout and stderr of subprocess.
     """
+    temp = await fs.temp_dir(action.make_child(fs.temp_dir))
+
+    stdout = temp / "stdout"
+    stderr = temp / "stderr"
+
+    # Open files to pass as stdout and stderr for subprocess
+    f_stdout = open(stdout)  # noqa: SIM115
+    f_stderr = open(stderr)  # noqa: SIM115
+
     action.running(" ".join(args))
     process = await asyncio.create_subprocess_exec(
         *args,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
+        stdout=f_stdout,
+        stderr=f_stderr,
     )
-    action.succeed()
 
     async def cleanup():
         # If program hasn't quit already
@@ -94,7 +109,13 @@ async def run_in_background(
                 process.kill()
                 log.error("Subprocess failed to exit in given timeout window")
 
+        # Close handles for stdout and stderr
+        f_stdout.close()
+        f_stderr.close()
+
     action.add_teardown_hook(cleanup)
+
+    return stdout, stderr
 
 
 run_async = deprecated("Use `run_in_background` instead")(run_in_background)
@@ -103,7 +124,7 @@ run_async = deprecated("Use `run_in_background` instead")(run_in_background)
 async def run_detached(
     action: ActionSession,
     *args: str,
-) -> None:
+) -> tuple[Path, Path]:
     """Run the given process, but detach it such that it won't exit, even after
     the markten recipe finishes.
 
@@ -116,7 +137,21 @@ async def run_detached(
         Action session.
     *args : str
         Program to execute.
+
+    Returns
+    -------
+    tuple[Path, Path]
+        File paths for stdout and stderr of subprocess.
     """
+    temp = await fs.temp_dir(action.make_child(fs.temp_dir))
+
+    stdout = temp / "stdout"
+    stderr = temp / "stderr"
+
+    # Open files to pass as stdout and stderr for subprocess
+    f_stdout = open(stdout)  # noqa: SIM115
+    f_stderr = open(stderr)  # noqa: SIM115
+
     action.running(" ".join(args))
 
     if sys.platform == "win32":
@@ -135,8 +170,8 @@ async def run_detached(
 
     subprocess.Popen(
         args,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stdout=f_stdout,
+        stderr=f_stderr,
         **options,
     )
-    action.succeed()
+    return stdout, stderr
