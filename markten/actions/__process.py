@@ -12,7 +12,8 @@ from collections.abc import Callable
 from logging import Logger
 from pathlib import Path
 from typing import Any
-from warnings import deprecated
+
+from typing_extensions import deprecated
 
 from markten import ActionSession
 from markten.__utils import TextCollector

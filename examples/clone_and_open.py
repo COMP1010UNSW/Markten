@@ -28,9 +28,7 @@ async def setup(action: ActionSession, lab: str, zid: str):
     """Set up lab exercise"""
     directory = await actions.git.clone(
         action,
-        f"git@nw-syd-gitlab.cseunsw.tech:COMP2511/{term}/students/{zid}/{
-            lab
-        }.git",
+        f"git@nw-syd-gitlab.cseunsw.tech:COMP2511/{term}/students/{zid}/{lab}.git",
         branch="submission",
         fallback_to_main=True,
     )
