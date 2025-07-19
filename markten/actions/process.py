@@ -14,6 +14,7 @@ from typing import Any
 from warnings import deprecated
 
 from markten import ActionSession
+from markten.__utils import TextCollector
 from markten.actions import fs
 
 from .__async_process import run_process
@@ -53,6 +54,40 @@ async def run(
         raise RuntimeError(f"Process exited with code {returncode}")
     action.succeed()
     return returncode
+
+
+async def run_stdout(
+    action: ActionSession,
+    *args: str,
+    allow_exit_failure: bool = False,
+) -> str:
+    """Run the given process, wait for it to exit, and resolve with its stdout
+    output.
+
+    Parameters
+    ----------
+    action : ActionSession
+        Action session
+    allow_exit_failure : bool, optional
+        Whether to fail the action if the process exits with a non-zero status
+        code, by default False
+
+    Returns
+    -------
+    str
+        Process stdout
+    """
+    action.running(" ".join(args))
+    stdout = TextCollector()
+    returncode = await run_process(
+        args,
+        on_stdout=stdout,
+        on_stderr=action.log,
+    )
+    if returncode and not allow_exit_failure:
+        raise RuntimeError(f"Process exited with code {returncode}")
+    action.succeed()
+    return str(stdout)
 
 
 async def run_in_background(
