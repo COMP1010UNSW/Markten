@@ -19,13 +19,15 @@ console = Console()
 
 title = f"MarkTen - v{consts.VERSION}"
 
-help_text = """
+help_text = f"""
 ✅  Assess your students' work with all of the [green]delight[/] and none of the [red]tedium[/]
 
 Usage: [bold magenta]markten [OPTIONS] RECIPE [ARGS]...[/]
 
 Options:
   [yellow]-v, --verbose[/]  Increase the verbosity of markten's output.
+                 You can also set this using '[yellow]{consts.VERBOSE_ENV_VAR}[/]' environment variable.
+
   [yellow]--version[/]      Show the version and exit.
   [yellow]--help[/]         Show this message and exit.
 
