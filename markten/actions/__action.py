@@ -3,7 +3,7 @@ from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from markten.__action_session import ActionSession
 
-P = ParamSpec('P')
+ActionParams = ParamSpec('ActionParams')
 
 ActionResult = Any | dict[str, Any]
 """
@@ -18,7 +18,10 @@ corresponding values.
 
 ResultType = TypeVar("ResultType")
 
-MarktenAction = Callable[Concatenate[ActionSession, P], Awaitable[ResultType]]
+MarktenAction = Callable[
+    Concatenate[ActionSession, ActionParams],
+    Awaitable[ResultType],
+]
 """
 A Markten action is an async function which accepts an `ActionSession`, as well
 as (optionally) other parameters. It can use this `ActionSession` to register
@@ -26,7 +29,9 @@ teardown hooks, and to create child actions.
 """
 
 
-def markten_action(action: MarktenAction) -> MarktenAction:
+def markten_action(
+    action: MarktenAction[ActionParams, ResultType],
+) -> MarktenAction[ActionParams, ResultType]:
     """Decorator to assert that a function satisfies the action type
     definition.
 
