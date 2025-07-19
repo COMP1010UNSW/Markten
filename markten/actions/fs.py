@@ -14,7 +14,7 @@ from markten import ActionSession
 async def temp_dir(action: ActionSession) -> Path:
     """Create a temporary directory, yielding its path."""
     action.message("Creating temporary directory")
-    temp_dir_cm = a_tempfile.TemporaryDirectory(prefix="markten")
+    temp_dir_cm = a_tempfile.TemporaryDirectory(prefix="markten-")
 
     # Need to manually open the file, as per
     # https://github.com/Tinche/aiofiles/issues/161#issuecomment-1974852636
