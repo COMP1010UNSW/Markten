@@ -135,6 +135,7 @@ class Recipe:
                     "To show stack trace, set recipe verbosity to a value >= 1"
                 )
             print("Goodbye!")
+            exit(1)
 
     async def async_run(self):
         """Run the marking recipe for each permutation given by the generators.
