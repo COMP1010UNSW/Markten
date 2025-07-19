@@ -6,6 +6,7 @@ Actions associated with the file system.
 
 from pathlib import Path
 
+import aiofiles
 from aiofiles import tempfile as a_tempfile
 
 from markten import ActionSession
@@ -16,10 +17,19 @@ async def temp_dir(action: ActionSession) -> Path:
     action.message("Creating temporary directory")
     temp_dir_cm = a_tempfile.TemporaryDirectory(prefix="markten-")
 
-    # Need to manually open the file, as per
+    # Need to manually open/close the file, as per
     # https://github.com/Tinche/aiofiles/issues/161#issuecomment-1974852636
     action.add_teardown_hook(lambda: temp_dir_cm.__aexit__(None, None, None))
 
     file_path = await temp_dir_cm.__aenter__()
     action.succeed(file_path)
     return Path(file_path)
+
+
+async def write_file(action: ActionSession, file: Path, text: str) -> None:
+    """
+    Write the given text into the given file.
+    """
+    action.message("Writing text to file")
+    async with aiofiles.open(file) as f:
+        await f.write(text)
