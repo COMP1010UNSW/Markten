@@ -6,7 +6,7 @@ A single step within a recipe.
 
 import asyncio
 import inspect
-from typing import Any, TypeVar
+from typing import Any, ParamSpec, TypeVar
 
 from rich.live import Live
 
@@ -15,6 +15,7 @@ from markten.__cli import CliManager
 from markten.__consts import TIME_PER_CLI_FRAME
 from markten.actions.__action import MarktenAction, ResultType
 
+P = ParamSpec("P")
 T = TypeVar("T")
 
 
@@ -108,7 +109,7 @@ class RecipeStep:
 
 
 async def call_action_with_context(
-    fn: MarktenAction[T],
+    fn: MarktenAction[P, T],
     context: dict[str, Any],
     action: ActionSession,
 ) -> T:
@@ -128,23 +129,21 @@ async def call_action_with_context(
     ActionGenerator
         Return of that function, given its required parameters.
     """
-    namespace = context | {"action": action}
-
     args = inspect.getfullargspec(fn)
     # Check if function uses kwargs
     kwargs_used = args[2] is not None
     if kwargs_used:
         # If so, pass the full namespace
-        promise = fn(**namespace)
+        promise = fn(action, **context) # type: ignore
     else:
         # Otherwise, only pass the args it requests
         named_args = args[0]
         param_subset = {
             name: value
-            for name, value in namespace.items()
+            for name, value in context.items()
             if name in named_args
         }
-        promise = fn(**param_subset)
+        promise = fn(action, **param_subset) # type: ignore
 
     try:
         ret = await promise
@@ -158,8 +157,8 @@ async def call_action_with_context(
 
 
 def dict_to_actions(
-    actions: dict[str, MarktenAction[ResultType]],
-) -> list[MarktenAction[ResultType]]:
+    actions: dict[str, MarktenAction[P, ResultType]],
+) -> list[MarktenAction[P, ResultType]]:
     """Convert the given dictionary of actions into a list of actions.
 
     All the given actions will be run in parallel.
