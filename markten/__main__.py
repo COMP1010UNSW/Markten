@@ -60,12 +60,16 @@ def show_help(ctx: click.Context, param: click.Option, value: bool):
 @click.argument("args", nargs=-1)
 @click.version_option(consts.VERSION)
 def main(recipe: str, args: tuple[str, ...], verbose: int = 0):
+    console = Console()
     # Set verbosity
     get_context().verbosity = verbose
     # replace argv
     sys.argv = [sys.argv[0], *args]
-    # Then run code as main
-    runpy.run_path(recipe, {}, "__main__")
+    try:
+        # Then run code as main
+        runpy.run_path(recipe, {}, "__main__")
+    except Exception:
+        console.print_exception()
 
 
 if __name__ == "__main__":
