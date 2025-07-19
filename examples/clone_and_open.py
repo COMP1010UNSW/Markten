@@ -18,6 +18,12 @@ def command_line():
     return parameters.from_object(parser.parse_args(), ["lab"])
 
 
+marker = Recipe("COMP2511 Lab Marking")
+
+marker.parameter("zid", parameters.stdin("zid"))
+marker.parameters(command_line())
+
+@marker.step
 async def setup(action: ActionSession, lab: str, zid: str):
     """Set up lab exercise"""
     directory = await actions.git.clone(
@@ -44,12 +50,6 @@ def print_student_info(action: ActionSession, zid: str):
     return actions.process.run(action, "ssh", "cse", "acc", zid)
 
 
-marker = Recipe("COMP2511 Lab Marking")
-
-marker.parameter("zid", parameters.stdin("zid"))
-marker.parameters(command_line())
-
-marker.step(setup)
 marker.step(open_code, print_student_info)
 
 if __name__ == "__main__":
