@@ -94,7 +94,15 @@ async def push(
         else:
             remote, branch = set_upstream
 
-        program = ("git", "-C", str(dir), "push", remote, branch)
+        program = (
+            "git",
+            "-C",
+            str(dir),
+            "push",
+            "--set-upstream",
+            remote,
+            branch,
+        )
 
     await process.run(action, *program)
 
