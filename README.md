@@ -76,7 +76,10 @@ Write simple marking recipes by defining simple functions for each step.
 
 ```py
 # Functions can take arbitrary parameters, as long as those parameters were
-# defined earlier in the script
+# defined earlier in the script.
+# Using the `Recipe.step` decorator allows us to register an action as a step
+# to the recipe.
+@marker.step
 async def setup(action: ActionSession, repo: str):
     """Set up marking environment"""
     # Clone the given git repo to a temporary directory
@@ -84,8 +87,6 @@ async def setup(action: ActionSession, repo: str):
     return {
         "directory": directory,
     }
-
-marker.step(setup)
 ```
 
 The values returned by your previous steps can be used in later steps, just
