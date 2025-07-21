@@ -91,13 +91,14 @@ class Recipe:
             self.__params.add(name, values)
 
     @overload
-    def step(self, action: MarktenAction[P, T]) -> MarktenAction[P, T]: ...
-
-    @overload
     def step(
         self,
+        action: MarktenAction | dict[str, MarktenAction],
         *actions: MarktenAction | dict[str, MarktenAction],
     ) -> None: ...
+
+    @overload
+    def step(self, action: MarktenAction[P, T]) -> MarktenAction[P, T]: ...
 
     def step(
         self,
