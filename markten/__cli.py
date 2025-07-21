@@ -8,6 +8,7 @@ This is used to report the progress of tasks that run simultaneously.
 
 from collections.abc import Callable
 
+from rich.columns import Columns
 from rich.console import Group, RenderableType
 from rich.live import Live
 from rich.padding import Padding
@@ -26,7 +27,7 @@ PARTIAL_OUTPUT_LINES = 10
 def action_status(action: ActionInfo, title: Text) -> RenderableType:
     # Need weird spacing to make things line up due to emoji annoyance
     if action.status == ActionStatus.Running:
-        return Spinner("dots", title)
+        return Columns([Spinner("dots"), title])
     elif action.status == ActionStatus.Failure:
         return Text.assemble("❌ ", title, overflow="ellipsis", no_wrap=True)
     else:  # ActionStatus.Success

@@ -52,7 +52,7 @@ class RecipeStep:
         dict[str, Any]
             Data from this step, to use when running future steps.
         """
-        with Live(refresh_per_second=1 / TIME_PER_CLI_FRAME) as live:
+        with Live(refresh_per_second=(1 / TIME_PER_CLI_FRAME)) as live:
             spinners = CliManager(live)
             if len(self.__actions) > 1:
                 name: str | object = f"Step {self.__index + 1}"
@@ -134,7 +134,7 @@ async def call_action_with_context(
     kwargs_used = args[2] is not None
     if kwargs_used:
         # If so, pass the full namespace
-        promise = fn(action, **context) # type: ignore
+        promise = fn(action, **context)  # type: ignore
     else:
         # Otherwise, only pass the args it requests
         named_args = args[0]
@@ -143,7 +143,7 @@ async def call_action_with_context(
             for name, value in context.items()
             if name in named_args
         }
-        promise = fn(action, **param_subset) # type: ignore
+        promise = fn(action, **param_subset)  # type: ignore
 
     try:
         ret = await promise

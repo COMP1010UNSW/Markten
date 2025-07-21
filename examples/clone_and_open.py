@@ -24,7 +24,7 @@ marker.parameter("zid", parameters.stdin("zid"))
 marker.parameters(command_line())
 
 @marker.step
-async def setup(action: ActionSession, lab: str, zid: str):
+async def clone_work(action: ActionSession, lab: str, zid: str):
     """Set up lab exercise"""
     directory = await actions.git.clone(
         action,
