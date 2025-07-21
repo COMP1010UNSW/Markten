@@ -4,27 +4,51 @@
 Actions associated with the file system.
 """
 
+import asyncio
+import shutil
 from pathlib import Path
+from tempfile import mkdtemp
 
 import aiofiles
 import aiofiles.ospath
-from aiofiles import tempfile as a_tempfile
 
 from markten import ActionSession
 from markten.actions.__action import markten_action
 
 
 @markten_action
-async def temp_dir(action: ActionSession) -> Path:
-    """Create a temporary directory, yielding its path."""
+async def temp_dir(action: ActionSession, remove: bool = False) -> Path:
+    """Create a temporary directory, and return its path.
+
+    Parameters
+    ----------
+    action : ActionSession
+        Action session
+    remove : bool, optional
+        Whether to remove the temporary directory during teardown, by default
+        False
+
+    Returns
+    -------
+    Path
+        Path to temporary directory.
+    """
     action.message("Creating temporary directory")
-    temp_dir_cm = a_tempfile.TemporaryDirectory(prefix="markten-")
 
-    # Need to manually open/close the file, as per
-    # https://github.com/Tinche/aiofiles/issues/161#issuecomment-1974852636
-    action.add_teardown_hook(lambda: temp_dir_cm.__aexit__(None, None, None))
+    # Need to manually run mkdtemp in executor, as a version that is not
+    # removed is not provided by `aiofiles.tempfile`
+    loop = asyncio.get_event_loop()
+    file_path = await loop.run_in_executor(
+        None, lambda: mkdtemp(prefix="markten-")
+    )
 
-    file_path = await temp_dir_cm.__aenter__()
+    async def teardown():
+        loop = asyncio.get_event_loop()
+        loop.run_in_executor(None, lambda: shutil.rmtree(file_path))
+
+    if remove:
+        action.add_teardown_hook(teardown)
+
     action.succeed(file_path)
     return Path(file_path)
 
