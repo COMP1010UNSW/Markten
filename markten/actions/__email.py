@@ -63,6 +63,9 @@ async def compose(
     https://www.rfc-editor.org/rfc/rfc6068
     """
     # TODO: Support attachments, eg by using `xdg-email` command on Linux.
+    # Perhaps I could also support specific email apps (eg Thunderbird) to
+    # allow for specifying things like the sender. Doing that would be very
+    # painful compared to a generic solution though.
     if isinstance(to, list):
         to = ",".join(to)
 
