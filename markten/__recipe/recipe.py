@@ -10,7 +10,7 @@ import os
 import traceback
 from collections.abc import Iterable, Mapping
 from datetime import datetime
-from typing import Any
+from typing import Any, ParamSpec, TypeVar, overload
 
 import humanize
 from rich import print
@@ -21,6 +21,9 @@ from markten.__recipe.parameters import ParameterManager
 from markten.__recipe.runner import RecipeRunner
 from markten.__recipe.step import RecipeStep, dict_to_actions
 from markten.actions.__action import MarktenAction
+
+P = ParamSpec("P")
+T = TypeVar("T")
 
 DEFAULT_VERBOSITY = int(os.getenv("MARKTEN_VERBOSITY", "0"))
 
@@ -87,10 +90,20 @@ class Recipe:
         for name, values in parameters.items():
             self.__params.add(name, values)
 
+    @overload
+    def step(self, action: MarktenAction[P, T]) -> MarktenAction[P, T]: ...
+
+    @overload
     def step(
         self,
-        *step: MarktenAction | dict[str, MarktenAction],
-    ) -> None:
+        *actions: MarktenAction | dict[str, MarktenAction],
+    ) -> None: ...
+
+    def step(
+        self,
+        action: MarktenAction | dict[str, MarktenAction],
+        *other_actions: MarktenAction | dict[str, MarktenAction],
+    ) -> MarktenAction | None:
         """Add a step to the recipe.
 
         The step can be a variety of types:
@@ -108,8 +121,13 @@ class Recipe:
         *step : MarktenAction | dict[str, MarktenAction]
             Action(s) to be run, as per the documentation above.
         """
+        full_step: tuple[MarktenAction | dict[str, MarktenAction], ...] = (
+            action,
+            *other_actions,
+        )
+
         actions: list[MarktenAction] = []
-        for action in step:
+        for action in full_step:
             if isinstance(action, dict):
                 # Convert dictionary into an action that produces that
                 # dictionary
@@ -117,6 +135,12 @@ class Recipe:
             else:
                 actions.append(action)
         self.__steps.append(RecipeStep(len(self.__steps), actions))
+
+        # If used as a decorator, return the function
+        if len(full_step) == 1 and callable(full_step[0]):
+            return full_step[0]
+        else:
+            return None
 
     def run(self):
         """Run the marking recipe for each permutation given by the generators.
