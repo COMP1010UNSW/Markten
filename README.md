@@ -93,11 +93,10 @@ The values returned by your previous steps can be used in later steps, just
 by giving the function parameters the same name.
 
 ```py
+@marker.step
 def open_code(action: ActionSession, directory: Path):
     """Open the cloned git repo in VS Code"""
     return actions.editor.vs_code(action, directory)
-
-marker.step(open_code)
 ```
 
 Then run the recipe. It'll run for every permutation of your parameters, making
