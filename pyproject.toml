@@ -28,8 +28,8 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "rich >=13.9.4, <15",
-    "click >= 8.1.8, <9",
+    "rich>=14,<15",
+    "click>=8.3,<9",
     "platformdirs (>=4.3.6,<5.0.0)",
     "aiosqlite (>=0.21.0,<0.22.0)",
     "humanize (>=4.12.2,<5.0.0)",
@@ -48,7 +48,7 @@ markten = "markten.__main__:main"
 
 [dependency-groups]
 dev = [
-    "ruff>=0.12.1,<0.14",
+    "ruff>=0.14,<1",
     "mypy>=1.16.1,<2",
     "pytest>=8.4.1,<9",
     "pywin32>=308 ; sys_platform == 'win32'",
