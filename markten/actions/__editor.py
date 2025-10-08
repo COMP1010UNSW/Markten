@@ -42,7 +42,7 @@ async def vs_code(
     """
     # -n = new window
     # -w = CLI waits for window exit
-    await process.run(
+    _ = await process.run(
         action.make_child(process.run),
         "code",
         "-nw",
@@ -75,14 +75,14 @@ async def vs_code(
 
         # Create a backup copy
         state_backup = state_path.with_name("state-markten-backup.vscdb")
-        copyfile(state_path, state_backup)
+        _ = copyfile(state_path, state_backup)
         log.info(f"Created backup of VS Code state at {state_backup}")
 
         try:
             async with aiosqlite.connect(state_path) as db:
                 cursor = await db.execute(
                     "SELECT [value] FROM ItemTable WHERE  [key] = "
-                    "'history.recentlyOpenedPathsList'"
+                    + "'history.recentlyOpenedPathsList'"
                 )
                 history_raw = await cursor.fetchone()
                 assert history_raw
@@ -109,9 +109,9 @@ async def vs_code(
 
                 # Then save it back out to VS Code
                 new_history_str = json.dumps({"entries": new_history})
-                await db.execute(
+                _ = await db.execute(
                     "UPDATE ItemTable SET [value] = ? WHERE key = "
-                    "'history.recentlyOpenedPathsList'",
+                    + "'history.recentlyOpenedPathsList'",
                     (new_history_str,),
                 )
                 await db.commit()
@@ -120,7 +120,7 @@ async def vs_code(
             log.exception(
                 "Error while updating VS Code state, reverting to back-up"
             )
-            copyfile(state_backup, state_path)
+            _ = copyfile(state_backup, state_path)
             # Continue error propagation
             raise
 
