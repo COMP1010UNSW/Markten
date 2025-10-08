@@ -127,3 +127,21 @@ async def vs_code(
     if remove_history and path:
         action.add_teardown_hook(cleanup_vscode_history)
     return action
+
+
+@markten_action
+async def zed(
+    action: ActionSession,
+    path: Path | None = None,
+):
+    """
+    Launch a new Zed window at the given Path.
+    """
+    # -n = new window
+    # -w = CLI waits for window exit
+    _ = await process.run(
+        action.make_child(process.run),
+        "zed",
+        "-nw",
+        *([str(path)] if path else []),
+    )
