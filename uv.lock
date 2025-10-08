@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.11"
 
 [[package]]
@@ -186,7 +186,7 @@ dev = [
     { name = "mypy", specifier = ">=1.16.1,<2" },
     { name = "pytest", specifier = ">=8.4.1,<9" },
     { name = "pywin32", marker = "sys_platform == 'win32'", specifier = ">=308" },
-    { name = "ruff", specifier = ">=0.12.1,<0.13" },
+    { name = "ruff", specifier = ">=0.12.1,<0.14" },
     { name = "types-aiofiles", specifier = ">=24.1.0.20250708,<25" },
     { name = "types-pywin32", specifier = ">=308.0.0.20250128" },
 ]
