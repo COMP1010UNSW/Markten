@@ -4,6 +4,7 @@
 Actions associated with `git` and Git repos.
 """
 
+import re
 from logging import Logger
 from pathlib import Path
 
@@ -15,6 +16,26 @@ from markten.actions.__process import stdout_of
 log = Logger(__name__)
 
 DEFAULT_REMOTE = "origin"
+
+
+async def branch_exists_on_remote(
+    action: ActionSession, dir: Path, branch: str
+) -> bool:
+    """
+    Return whether the given branch exists on the remote
+    
+    Requires `git fetch` to have been run beforehand
+    """
+    remote_branches = await process.stdout_of(
+        action, "git", "-C", str(dir), "branch", "--remote"
+    )
+    regex = re.compile(rf"^\s*{DEFAULT_REMOTE}/{branch}$")
+
+    for remote_branch in remote_branches.splitlines():
+        if regex.search(remote_branch.strip()) is not None:
+            return True
+
+    return False
 
 
 @markten_action
@@ -52,23 +73,33 @@ async def clone(
 
     program: tuple[str, ...] = ("git", "clone", repo_url, str(clone_path))
 
-    await process.run(action, *program)
+    _ = await process.run(action, *program)
 
     if branch:
-        checkout_action = action.make_child(checkout)
-        try:
-            await checkout(
-                checkout_action,
-                clone_path,
-                branch,
-                create=True,
+        if await action.child(branch_exists_on_remote, clone_path, branch):
+            checkout_action = action.make_child(checkout)
+            try:
+                await checkout(
+                    checkout_action,
+                    clone_path,
+                    branch,
+                    create=True,
+                )
+            except Exception as e:
+                checkout_action.fail(str(e))
+                if fallback_to_main:
+                    action.log("Note: remaining on main branch")
+                else:
+                    raise
+        elif fallback_to_main:
+            action.log(
+                f"Branch {branch} does not exist. Remaining on main branch"
             )
-        except Exception as e:
-            checkout_action.fail(str(e))
-            if fallback_to_main:
-                action.log("Note: remaining on main branch")
-            else:
-                raise
+        else:
+            action.fail(
+                f"Branch {branch} does not exist. Remaining on main branch"
+            )
+            raise RuntimeError("Checkout failed")
 
     return clone_path
 
@@ -104,13 +135,13 @@ async def push(
             branch,
         )
 
-    await process.run(action, *program)
+    _ = await process.run(action, *program)
 
 
 @markten_action
 async def pull(action: ActionSession, dir: Path) -> None:
     program = ("git", "-C", str(dir), "pull")
-    await process.run(action, *program)
+    _ = await process.run(action, *program)
 
 
 @markten_action
@@ -142,10 +173,10 @@ async def checkout(
         `str` is given, this will push to that remote.
     """
 
-    if push_to_remote is not None and not create:
+    if push_to_remote and not create:
         raise ValueError(
             "Markten.actions.git.checkout: Cannot specify "
-            "`push_to_remote` if `create is False`"
+            + "`push_to_remote` if `create is False`"
         )
     program: tuple[str, ...] = (
         "git",
@@ -155,14 +186,15 @@ async def checkout(
         *(("-b",) if create else ()),
         branch_name,
     )
-    await process.run(action, *program)
+    _ = await process.run(action, *program)
 
     if push_to_remote is not False:
         await push(action.make_child(push), dir, set_upstream=push_to_remote)
 
     action.succeed(
         f"Switched to{' new' if create else ''} "
-        f"branch {branch_name}" + " and pushed to remote"
+        + f"branch {branch_name}"
+        + " and pushed to remote"
         if push_to_remote
         else ""
     )
@@ -204,7 +236,7 @@ async def add(
     if all and len(files):
         raise ValueError(
             "Should not specify files to commit when using the `all=True` "
-            "flag."
+            + "flag."
         )
 
     program: tuple[str, ...] = (
@@ -215,7 +247,7 @@ async def add(
         *(["--all"] if all else map(str, files)),
     )
 
-    await process.run(action, *program)
+    _ = await process.run(action, *program)
 
     if all:
         action.succeed("Git: staged all files")
@@ -236,7 +268,7 @@ async def commit(
     if files is not None or all:
         await add(action.make_child(add), dir, files, all=all)
 
-    await process.run(
+    _ = await process.run(
         action,
         "git",
         "-C",
