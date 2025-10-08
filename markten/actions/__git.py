@@ -97,7 +97,7 @@ async def clone(
             )
         else:
             action.fail(
-                f"Branch {branch} does not exist. Remaining on main branch"
+                f"Branch {branch} does not exist."
             )
             raise RuntimeError("Checkout failed")
 
