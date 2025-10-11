@@ -110,9 +110,44 @@ async def push(
     dir: Path,
     /,
     set_upstream: bool | str | tuple[str, str] = False,
+    push_options: dict[str, str] | None = None,
 ):
+    """Perform a `git push` operation.
+
+    By default, this pushes the current branch to its corresponding upstream
+    branch on the remote.
+
+    Parameters
+    ----------
+    action : ActionSession
+        Markten action
+    dir : Path
+        Path to git repository
+    set_upstream : bool | str | tuple[str, str], optional
+        Whether to create an upstream branch on the remote, by default False.
+        If this is `True`, the same branch name will be used on `origin`.
+        If this is a `str`, its value will be used as the upstream branch name
+        on the remote `origin`.
+        If this is a `tuple[str, str]`, it will be treated as
+        `(remote, branch)`.
+    push_options : dict[str, str], optional
+        Push options. These can be used to perform actions on the remote, such
+        as creating a merge request or skipping continuous integration checks.
+    """
+    if push_options is None:
+        opts: list[str] = []
+    else:
+        opts = [
+            # Flattened list of `-o key1:value1 -o key2:value2`
+            # Really not a fan of this syntax
+            # https://stackoverflow.com/a/952952/6335363
+            x
+            for k, v in push_options.items()
+            for x in ["-o", f"{k}:{v}"]
+        ]
+    
     if set_upstream is False:
-        program: tuple[str, ...] = ("git", "-C", str(dir), "push")
+        program: tuple[str, ...] = ("git", "-C", str(dir), "push", *opts)
     else:
         if set_upstream is True:
             remote = DEFAULT_REMOTE
@@ -130,6 +165,7 @@ async def push(
             "-C",
             str(dir),
             "push",
+            *opts,
             "--set-upstream",
             remote,
             branch,
