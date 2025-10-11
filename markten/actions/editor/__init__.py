@@ -4,7 +4,8 @@
 Actions for launching text editors
 """
 
-from .__editor import vs_code, zed
+from .__vs_code import vs_code
+from .__zed import zed
 
 __all__ = [
     "vs_code",

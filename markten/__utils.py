@@ -4,7 +4,9 @@
 Utility functions.
 """
 
+import asyncio
 import os
+import shutil
 from pathlib import Path
 from types import FunctionType
 from typing import Any
@@ -26,6 +28,16 @@ def relativize_file(file: Path, to: Path | None = None) -> Path:
         return file.relative_to(to)
     else:
         return file
+
+
+async def copy_file(src: Path, dest: Path, *, preserve_metadata: bool = False):
+    """Copy file from src to dest in an asyncio thread"""
+    fn = shutil.copy2 if preserve_metadata else shutil.copyfile
+    _ = await asyncio.to_thread(fn, src, dest)
+
+
+async def unlink_file(f: Path) -> None:
+    _ = await asyncio.to_thread(lambda: f.unlink())
 
 
 def recipe_banner(
