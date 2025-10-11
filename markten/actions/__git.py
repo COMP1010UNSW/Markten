@@ -110,7 +110,7 @@ async def push(
     dir: Path,
     /,
     set_upstream: bool | str | tuple[str, str] = False,
-    push_options: dict[str, str] | None = None,
+    push_options: list[str] | None = None,
 ):
     """Perform a `git push` operation.
 
@@ -130,25 +130,24 @@ async def push(
         on the remote `origin`.
         If this is a `tuple[str, str]`, it will be treated as
         `(remote, branch)`.
-    push_options : dict[str, str], optional
-        Push options. These can be used to perform actions on the remote, such
-        as creating a merge request or skipping continuous integration checks.
+    push_options : list[str], optional
+        Push options. These can be used to perform actions on some remotes, 
+        such as creating a merge request or skipping continuous integration 
+        checks. Each option should be a string. The `-o` flag will be added
+        automatically.
     """
-    if push_options is None:
-        opts: list[str] = []
-    else:
-        opts = [
-            # Flattened list of `-o key1:value1 -o key2:value2`
+    additional_flags: list[str] = []
+    if push_options is not None:
+        additional_flags = [
+            # Flattened list of `-o option1 -o option2
             # Really not a fan of this syntax
             # https://stackoverflow.com/a/952952/6335363
             x
-            for k, v in push_options.items()
-            for x in ["-o", f"{k}:{v}"]
+            for opt in push_options
+            for x in ["-o", opt]
         ]
     
-    if set_upstream is False:
-        program: tuple[str, ...] = ("git", "-C", str(dir), "push", *opts)
-    else:
+    if set_upstream is not False:
         if set_upstream is True:
             remote = DEFAULT_REMOTE
             branch = await current_branch(
@@ -159,23 +158,24 @@ async def push(
             branch = set_upstream
         else:
             remote, branch = set_upstream
+        
+        additional_flags.extend(["--set-upstream", remote, branch])
 
-        program = (
-            "git",
-            "-C",
-            str(dir),
-            "push",
-            *opts,
-            "--set-upstream",
-            remote,
-            branch,
-        )
+    program = (
+        "git",
+        "-C",
+        str(dir),
+        "push",
+        *additional_flags,
+    )
 
     _ = await process.run(action, *program)
 
 
 @markten_action
 async def pull(action: ActionSession, dir: Path) -> None:
+    """Perform a `git pull` operation.
+    """
     program = ("git", "-C", str(dir), "pull")
     _ = await process.run(action, *program)
 
@@ -259,7 +259,8 @@ async def add(
         List of files to add, by default None, indicating that no files
         should be added.
     all : bool, optional
-        whether to add all modified tracked files, by default False
+        whether to add all modified files, including untracked files, by
+        default False.
 
     Raises
     ------
@@ -297,12 +298,15 @@ async def commit(
     dir: Path,
     message: str,
     /,
-    all: bool = False,
-    push_after: bool = False,
     files: list[Path] | None = None,
+    all: bool = False,
+    untracked: bool = False,
+    push_after: bool = False,
+    push_upstream: bool | str | tuple[str, str] = False,
+    push_options: list[str] | None = None,
 ) -> None:
     """Perform a `git commit` operation.
-    
+
     Parameters
     ----------
     action : ActionSession
@@ -312,9 +316,25 @@ async def commit(
     message : str
         Commit message
     all : bool, optional
-        Whether to commit all changes
+        Whether to commit all changes. This will not commit untracked files.
+        Defaults to `False.
+    untracked : bool, optional
+        Whether to also commit untracked files. Implies `all=True`. Defaults to
+        False.
+    push_after : bool, optional
+        Whether to perform a `git push` operation after. Defaults to False.
+    push_upstream : bool | str | tuple[str, str], optional
+        Whether to push the commit to the remote, even if the branch doesn't
+        already exist on the remote. Requires `push_after` to be `True`.
+        Defaults to False.
+    push_options : dict[str, str | True], optional
+        Push options. Requires `push_after=True`. Defaults to `None`.
     """
-    if files is not None or all:
+    additional_flags: list[str] = []
+    if all:
+        additional_flags.append("-a")
+
+    if files is not None or untracked:
         await add(action.make_child(add), dir, files, all=all)
 
     _ = await process.run(
@@ -323,18 +343,24 @@ async def commit(
         "-C",
         str(dir),
         "commit",
+        *additional_flags,
         "-m",
         message,
     )
 
     if push_after:
-        await push(action.make_child(push), dir)
+        await push(
+            action.make_child(push),
+            dir,
+            set_upstream=push_upstream,
+            push_options=push_options,
+        )
 
 
 @markten_action
 async def current_branch(action: ActionSession, dir: Path) -> str:
     """Determine the current branch, returning it as the output of the action.
-    
+
     Parameters
     ----------
     action : ActionSession
