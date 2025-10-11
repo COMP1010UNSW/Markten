@@ -201,7 +201,7 @@ async def checkout(
         Branch to checkout
     create : bool, optional
         Whether to pass a `-b` flag to the `git checkout` operation,
-        signalling that `git` should create a new branch.
+        signaling that `git` should create a new branch.
     push_to_remote : str | bool, optional
         Whether to also push this branch to the given remote. This
         requires the `create` flag to also be `True`. If `True` is given,
@@ -259,7 +259,7 @@ async def add(
         List of files to add, by default None, indicating that no files
         should be added.
     all : bool, optional
-        whether to add all modified files, by default False
+        whether to add all modified tracked files, by default False
 
     Raises
     ------
@@ -301,6 +301,19 @@ async def commit(
     push_after: bool = False,
     files: list[Path] | None = None,
 ) -> None:
+    """Perform a `git commit` operation.
+    
+    Parameters
+    ----------
+    action : ActionSession
+        Action session
+    dir : Path
+        Path to git repository
+    message : str
+        Commit message
+    all : bool, optional
+        Whether to commit all changes
+    """
     if files is not None or all:
         await add(action.make_child(add), dir, files, all=all)
 
@@ -320,5 +333,14 @@ async def commit(
 
 @markten_action
 async def current_branch(action: ActionSession, dir: Path) -> str:
+    """Determine the current branch, returning it as the output of the action.
+    
+    Parameters
+    ----------
+    action : ActionSession
+        Action session
+    dir : Path
+        Path to git repository
+    """
     program = ("git", "-C", str(dir), "rev-parse", "--abbrev-ref", "HEAD")
     return await stdout_of(action, *program)
