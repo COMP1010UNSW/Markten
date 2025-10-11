@@ -23,7 +23,7 @@ async def branch_exists_on_remote(
 ) -> bool:
     """
     Return whether the given branch exists on the remote
-    
+
     Requires `git fetch` to have been run beforehand
     """
     remote_branches = await process.stdout_of(
@@ -53,6 +53,8 @@ async def clone(
 
     Parameters
     ----------
+    action : ActionSession
+        Markten action
     repo_url : str
         URL to clone
     branch : str | None, optional
@@ -96,9 +98,7 @@ async def clone(
                 f"Branch {branch} does not exist. Remaining on main branch"
             )
         else:
-            action.fail(
-                f"Branch {branch} does not exist."
-            )
+            action.fail(f"Branch {branch} does not exist.")
             raise RuntimeError("Checkout failed")
 
     return clone_path
