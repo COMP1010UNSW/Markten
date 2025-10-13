@@ -19,7 +19,10 @@ DEFAULT_REMOTE = "origin"
 
 
 async def branch_exists_on_remote(
-    action: ActionSession, dir: Path, branch: str
+    action: ActionSession,
+    dir: Path,
+    branch: str,
+    remote: str = DEFAULT_REMOTE,
 ) -> bool:
     """
     Return whether the given branch exists on the remote
@@ -29,7 +32,7 @@ async def branch_exists_on_remote(
     remote_branches = await process.stdout_of(
         action, "git", "-C", str(dir), "branch", "--remote"
     )
-    regex = re.compile(rf"^\s*{DEFAULT_REMOTE}/{branch}$")
+    regex = re.compile(rf"^\s*{remote}/{branch}$")
 
     for remote_branch in remote_branches.splitlines():
         if regex.search(remote_branch.strip()) is not None:
