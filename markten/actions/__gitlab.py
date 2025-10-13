@@ -20,7 +20,7 @@ class PushOptions:
         """
         self.__opts: list[str] = []
 
-    def build(self) -> list[str]:
+    def as_list(self) -> list[str]:
         """
         Return the push options for use in the `markten.git.push` action.
         """
