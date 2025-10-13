@@ -60,6 +60,7 @@ async def vs_code(
 
             target = snippet_dir / snippet_file
             snippet_targets.append(target)
+            target.parent.mkdir(parents=True, exist_ok=True)
             await copy_file(snippets, target, preserve_metadata=True)
 
     # -n = new window
