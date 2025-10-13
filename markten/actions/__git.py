@@ -134,8 +134,8 @@ async def push(
         If this is a `tuple[str, str]`, it will be treated as
         `(remote, branch)`.
     push_options : list[str], optional
-        Push options. These can be used to perform actions on some remotes, 
-        such as creating a merge request or skipping continuous integration 
+        Push options. These can be used to perform actions on some remotes,
+        such as creating a merge request or skipping continuous integration
         checks. Each option should be a string. The `-o` flag will be added
         automatically.
     """
@@ -149,7 +149,7 @@ async def push(
             for opt in push_options
             for x in ["-o", opt]
         ]
-    
+
     if set_upstream is not False:
         if set_upstream is True:
             remote = DEFAULT_REMOTE
@@ -161,7 +161,7 @@ async def push(
             branch = set_upstream
         else:
             remote, branch = set_upstream
-        
+
         additional_flags.extend(["--set-upstream", remote, branch])
 
     program = (
@@ -177,8 +177,7 @@ async def push(
 
 @markten_action
 async def pull(action: ActionSession, dir: Path) -> None:
-    """Perform a `git pull` operation.
-    """
+    """Perform a `git pull` operation."""
     program = ("git", "-C", str(dir), "pull")
     _ = await process.run(action, *program)
 
@@ -190,7 +189,7 @@ async def checkout(
     branch_name: str,
     /,
     create: bool = False,
-    push_to_remote: str | bool = False,
+    link_upstream: str | bool = False,
 ) -> None:
     """Perform a `git checkout` operation.
 
@@ -205,14 +204,15 @@ async def checkout(
     create : bool, optional
         Whether to pass a `-b` flag to the `git checkout` operation,
         signaling that `git` should create a new branch.
-    push_to_remote : str | bool, optional
-        Whether to also push this branch to the given remote. This
+    link_upstream : str | bool, optional
+        Whether to also link this branch to the given upstream remote. This
         requires the `create` flag to also be `True`. If `True` is given,
-        this will create the branch on the `origin` remote. Otherwise, if a
-        `str` is given, this will push to that remote.
+        this will set the upstream branch on the `origin` remote. If a `str` is
+        given, the upstream branch will set to that origin. If the branch
+        already exists on the remote, `git pull` will be run automatically.
     """
 
-    if push_to_remote and not create:
+    if link_upstream and not create:
         raise ValueError(
             "Markten.actions.git.checkout: Cannot specify "
             + "`push_to_remote` if `create is False`"
@@ -227,14 +227,31 @@ async def checkout(
     )
     _ = await process.run(action, *program)
 
-    if push_to_remote is not False:
-        await push(action.make_child(push), dir, set_upstream=push_to_remote)
+    if link_upstream is not False:
+        remote = DEFAULT_REMOTE if link_upstream is True else link_upstream
+        already_exists = await action.child(
+            branch_exists_on_remote,
+            dir,
+            branch_name,
+            remote,
+        )
+        _ = await action.child(
+            process.run,
+            "git",
+            "-C",
+            str(dir),
+            "branch",
+            f"--set-upstream-to={remote}/{branch_name}",
+            branch_name,
+        )
+        if already_exists:
+            await action.child(pull, dir)
 
     action.succeed(
         f"Switched to{' new' if create else ''} "
         + f"branch {branch_name}"
-        + " and pushed to remote"
-        if push_to_remote
+        + " and set upstream"
+        if link_upstream
         else ""
     )
 
@@ -338,7 +355,7 @@ async def commit(
         additional_flags.append("-a")
 
     if files is not None or untracked:
-        await add(action.make_child(add), dir, files, all=all)
+        await add(action.make_child(add), dir, files, all=untracked)
 
     _ = await process.run(
         action,
