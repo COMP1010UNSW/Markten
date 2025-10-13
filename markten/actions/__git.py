@@ -235,17 +235,20 @@ async def checkout(
             branch_name,
             remote,
         )
-        _ = await action.child(
-            process.run,
-            "git",
-            "-C",
-            str(dir),
-            "branch",
-            f"--set-upstream-to={remote}/{branch_name}",
-            branch_name,
-        )
         if already_exists:
+            _ = await action.child(
+                process.run,
+                "git",
+                "-C",
+                str(dir),
+                "branch",
+                f"--set-upstream-to={remote}/{branch_name}",
+                branch_name,
+            )
             await action.child(pull, dir)
+        else:
+            _ = await action.child(push, dir, set_upstream=True)
+            
 
     action.succeed(
         f"Switched to{' new' if create else ''} "
