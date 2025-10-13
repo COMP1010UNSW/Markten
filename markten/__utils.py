@@ -9,10 +9,10 @@ import os
 import shutil
 from pathlib import Path
 from types import FunctionType
-from typing import Any
 
 from rich.console import Console
 from rich.panel import Panel
+from typing_extensions import override
 
 from . import __consts as consts
 
@@ -37,6 +37,7 @@ async def copy_file(src: Path, dest: Path, *, preserve_metadata: bool = False):
 
 
 async def unlink_file(f: Path) -> None:
+    """Unlink the file at the given path in an asyncio thread"""
     _ = await asyncio.to_thread(lambda: f.unlink())
 
 
@@ -55,7 +56,7 @@ def recipe_banner(
     """
     console = Console()
 
-    text = []
+    text: list[str] = []
     if recipe_name:
         text.append(f"Recipe: [cyan]{recipe_name}[/]")
     if recipe_file:
@@ -74,9 +75,10 @@ class TextCollector:
     def __init__(self) -> None:
         self.__output: list[str] = []
 
-    def __call__(self, line: str) -> Any:
+    def __call__(self, line: str) -> None:
         self.__output.append(line)
 
+    @override
     def __str__(self) -> str:
         return "\n".join(self.__output).strip()
 
