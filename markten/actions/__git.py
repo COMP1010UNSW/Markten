@@ -88,7 +88,6 @@ async def clone(
                     checkout_action,
                     clone_path,
                     branch,
-                    create=True,
                 )
             except Exception as e:
                 checkout_action.fail(str(e))
