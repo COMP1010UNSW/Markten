@@ -40,7 +40,7 @@ async def read_stream(
 async def run_process(
     cmd: tuple[str, ...],
     stdin: str = "",
-    cwd: str | None = None,
+    cwd: Path | None = None,
     *,
     on_stdout: Callable[[str], None] | None = None,
     on_stderr: Callable[[str], None] | None = None,
@@ -78,6 +78,7 @@ async def run(
     action: ActionSession,
     *args: str,
     allow_exit_failure: bool = False,
+    cwd: Path | None = None,
 ) -> int:
     """Run the given process, and wait for it to exit before resolving.
 
@@ -90,6 +91,8 @@ async def run(
     allow_exit_failure : bool, optional
         Whether to fail the action if the process exits with a non-zero status
         code, by default False
+    cwd : Path
+        Working directory for child process.
 
     Returns
     -------
@@ -101,6 +104,7 @@ async def run(
         args,
         on_stdout=action.log,
         on_stderr=action.log,
+        cwd=cwd,
     )
     if returncode and not allow_exit_failure:
         raise RuntimeError(f"Process exited with code {returncode}")
@@ -113,6 +117,7 @@ async def stdout_of(
     action: ActionSession,
     *args: str,
     allow_exit_failure: bool = False,
+    cwd: Path | None = None,
 ) -> str:
     """Run the given process, wait for it to exit, and resolve with its stdout
     output.
@@ -126,6 +131,8 @@ async def stdout_of(
     allow_exit_failure : bool, optional
         Whether to fail the action if the process exits with a non-zero status
         code, by default False
+    cwd : Path
+        Working directory for child process.
 
     Returns
     -------
@@ -138,6 +145,7 @@ async def stdout_of(
         args,
         on_stdout=stdout,
         on_stderr=action.log,
+        cwd=cwd,
     )
     if returncode and not allow_exit_failure:
         raise RuntimeError(f"Process exited with code {returncode}")
@@ -150,6 +158,7 @@ async def run_in_background(
     action: ActionSession,
     *args: str,
     exit_timeout: float = 2,
+    cwd: Path | None = None,
 ) -> tuple[Path, Path]:
     """Run the given process in the background, only killing it during the
     tear-down phase.
@@ -166,6 +175,8 @@ async def run_in_background(
     exit_timeout : float, optional
         Number of seconds to wait after interrupting process with SIGINT before
         forcefully killing it using SIGKILL, by default 2.
+    cwd : Path
+        Working directory for child process.
 
     Returns
     -------
@@ -186,6 +197,7 @@ async def run_in_background(
         *args,
         stdout=f_stdout,
         stderr=f_stderr,
+        cwd=cwd,
     )
 
     async def teardown():
@@ -216,6 +228,7 @@ run_async = deprecated("Use `run_in_background` instead")(run_in_background)
 async def run_detached(
     action: ActionSession,
     *args: str,
+    cwd: Path | None = None,
 ) -> tuple[Path, Path]:
     """Run the given process, but detach it such that it won't exit, even after
     the markten recipe finishes.
@@ -229,6 +242,8 @@ async def run_detached(
         Action session.
     *args : str
         Program to execute.
+    cwd : Path
+        Working directory for child process.
 
     Returns
     -------
@@ -260,10 +275,11 @@ async def run_detached(
             "start_new_session": True,
         }
 
-    subprocess.Popen(
+    _ = subprocess.Popen(
         args,
         stdout=f_stdout,
         stderr=f_stderr,
+        cwd=cwd,
         **options,
     )
     return stdout, stderr
