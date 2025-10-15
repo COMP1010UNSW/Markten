@@ -63,8 +63,9 @@ async def clone(
     branch : str | None, optional
         Branch to checkout after cloning is complete, by default None
     fallback_to_main : bool, optional
-        Whether to fall back to the main branch if the given branch does
-        not exist, by default False
+        Whether to fall back to the main branch if the given `branch` does
+        not exist, by default False, meaning that the action will fail if the 
+        branch does not given.
     dir : Path | None, optional
         Directory to clone to, by default None for a temporary directory
     """
