@@ -30,6 +30,16 @@ def relativize_file(file: Path, to: Path | None = None) -> Path:
         return file
 
 
+async def link_file(original: Path, dest: Path):
+    """
+    Create a symolic link at `dest` which points to `original`, in an asyncio
+    thread.
+    """
+    _ = await asyncio.to_thread(
+        lambda: dest.symlink_to(original, original.is_dir())
+    )
+
+
 async def copy_file(src: Path, dest: Path, *, preserve_metadata: bool = False):
     """Copy file from src to dest in an asyncio thread"""
     fn = shutil.copy2 if preserve_metadata else shutil.copyfile

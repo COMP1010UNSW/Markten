@@ -14,7 +14,7 @@ import aiosqlite
 import platformdirs
 
 from markten.__action_session import ActionSession
-from markten.__utils import copy_file, unlink_file
+from markten.__utils import copy_file, link_file, unlink_file
 from markten.actions import process
 from markten.actions.__action import markten_action
 
@@ -61,7 +61,7 @@ async def vs_code(
             target = snippet_dir / snippet_file
             snippet_targets.append(target)
             target.parent.mkdir(parents=True, exist_ok=True)
-            await copy_file(snippets, target, preserve_metadata=True)
+            await link_file(snippets, target, preserve_metadata=True)
 
     # -n = new window
     # -w = CLI waits for window exit
