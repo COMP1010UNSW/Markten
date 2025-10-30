@@ -36,7 +36,7 @@ async def link_file(original: Path, dest: Path):
     thread.
     """
     _ = await asyncio.to_thread(
-        lambda: dest.symlink_to(original, original.is_dir())
+        lambda: dest.symlink_to(original.absolute(), original.is_dir())
     )
 
 
