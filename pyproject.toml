@@ -55,7 +55,7 @@ dev = [
     "types-pywin32>=308.0.0.20250128",
     "coverage>=7.9.1,<8",
     "jestspectation>=1.4.5,<2",
-    "types-aiofiles>=24.1.0.20250708,<25",
+    "types-aiofiles>=24.1.0.20250708,<26",
 ]
 
 [build-system]
