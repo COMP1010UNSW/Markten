@@ -33,7 +33,7 @@ dependencies = [
     "platformdirs (>=4.3.6,<5.0.0)",
     "aiosqlite>=0.21.0,<0.22.0",
     "humanize (>=4.12.2,<5.0.0)",
-    "aiofiles (>=24.1.0,<25.0.0)",
+    "aiofiles (>=24.1.0,<26.0.0)",
     # Readline support for Windows
     "pyreadline3>=3.5.4 ; sys_platform == 'win32'",
     "typing-extensions>=4.12.2",
