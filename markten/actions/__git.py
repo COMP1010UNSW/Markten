@@ -18,21 +18,41 @@ log = Logger(__name__)
 DEFAULT_REMOTE = "origin"
 
 
-async def branch_exists_on_remote(
+@markten_action
+async def branch_exists(
     action: ActionSession,
     dir: Path,
     branch: str,
-    remote: str = DEFAULT_REMOTE,
+    remote: str | bool = False,
 ) -> bool:
     """
     Return whether the given branch exists on the remote
 
     Requires `git fetch` to have been run beforehand
+
+    Parameters
+    ----------
+    dir : Path
+        Path to git repo
+    branch : str
+        Name of the branch to check for
+    remote : str | bool
+        If `remote` is specified, branches on that remote will be searched.
+        Otherwise, only local branches will be checked
     """
     remote_branches = await process.stdout_of(
-        action, "git", "-C", str(dir), "branch", "--remote"
+        action,
+        "git",
+        "-C",
+        str(dir),
+        "branch",
+        *("--remote" if remote else ()),
     )
-    regex = re.compile(rf"^\s*{remote}/{branch}$")
+    if remote is False:
+        regex = re.compile(rf"^\*?\s+{branch}$")
+    else:
+        remote_name = DEFAULT_REMOTE if remote is True else remote
+        regex = re.compile(rf"^\*?\s+{remote_name}/{branch}$")
 
     for remote_branch in remote_branches.splitlines():
         if regex.search(remote_branch.strip()) is not None:
@@ -64,7 +84,7 @@ async def clone(
         Branch to checkout after cloning is complete, by default None
     fallback_to_main : bool, optional
         Whether to fall back to the main branch if the given `branch` does
-        not exist, by default False, meaning that the action will fail if the 
+        not exist, by default False, meaning that the action will fail if the
         branch does not given.
     dir : Path | None, optional
         Directory to clone to, by default None for a temporary directory
@@ -82,7 +102,7 @@ async def clone(
     _ = await process.run(action, *program)
 
     if branch:
-        if await action.child(branch_exists_on_remote, clone_path, branch):
+        if await action.child(branch_exists, clone_path, branch, remote=True):
             checkout_action = action.make_child(checkout)
             try:
                 await checkout(
@@ -230,7 +250,7 @@ async def checkout(
     if link_upstream is not False:
         remote = DEFAULT_REMOTE if link_upstream is True else link_upstream
         already_exists = await action.child(
-            branch_exists_on_remote,
+            branch_exists,
             dir,
             branch_name,
             remote,
@@ -248,7 +268,6 @@ async def checkout(
             await action.child(pull, dir)
         else:
             _ = await action.child(push, dir, set_upstream=True)
-            
 
     action.succeed(
         f"Switched to{' new' if create else ''} "
