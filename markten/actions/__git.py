@@ -46,7 +46,7 @@ async def branch_exists(
         "-C",
         str(dir),
         "branch",
-        *("--remote" if remote else ()),
+        *(("--remote",) if remote else ()),
     )
     if remote is False:
         regex = re.compile(rf"^\s*\*?\s*{branch}$")
