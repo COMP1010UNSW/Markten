@@ -49,13 +49,13 @@ async def branch_exists(
         *("--remote" if remote else ()),
     )
     if remote is False:
-        regex = re.compile(rf"^\*?\s+{branch}$")
+        regex = re.compile(rf"^\s*\*?\s*{branch}$")
     else:
         remote_name = DEFAULT_REMOTE if remote is True else remote
-        regex = re.compile(rf"^\*?\s+{remote_name}/{branch}$")
+        regex = re.compile(rf"^\s*\*?\s*{remote_name}/{branch}$")
 
-    for remote_branch in remote_branches.splitlines():
-        if regex.search(remote_branch.strip()) is not None:
+    for b in remote_branches.splitlines():
+        if regex.search(b.strip()) is not None:
             return True
 
     return False
