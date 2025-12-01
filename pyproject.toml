@@ -50,7 +50,7 @@ markten = "markten.__main__:main"
 dev = [
     "ruff>=0.14,<1",
     "mypy>=1.16.1,<2",
-    "pytest>=8.4.1,<9",
+    "pytest>=8.4.1,<10",
     "pywin32>=308 ; sys_platform == 'win32'",
     "types-pywin32>=308.0.0.20250128",
     "coverage>=7.9.1,<8",
