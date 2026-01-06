@@ -30,7 +30,7 @@ async def vs_code(
     ----------
     action : ActionSession
         Action session
-    path : Path
+    paths : Path
         Paths to open in VS Code.
     remove_history : bool
         Whether to prevent the opened locations from being added to VS Code's
