@@ -218,7 +218,7 @@ dev = [
     { name = "coverage", specifier = ">=7.9.1,<8" },
     { name = "jestspectation", specifier = ">=1.4.5,<2" },
     { name = "mypy", specifier = ">=1.16.1,<2" },
-    { name = "pytest", specifier = ">=8.4.1,<9" },
+    { name = "pytest", specifier = ">=8.4.1,<10" },
     { name = "pytest-asyncio", specifier = ">=1.2.0" },
     { name = "pywin32", marker = "sys_platform == 'win32'", specifier = ">=308" },
     { name = "ruff", specifier = ">=0.14,<1" },

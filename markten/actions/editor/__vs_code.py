@@ -5,16 +5,11 @@ Code for managing the VS Code text editor.
 """
 
 import asyncio
-import json
 import logging
 from pathlib import Path
-from typing import NotRequired, TypedDict
-
-import aiosqlite
-import platformdirs
 
 from markten.__action_session import ActionSession
-from markten.__utils import copy_file, link_file, unlink_file
+from markten.__utils import link_file, unlink_file
 from markten.actions import process
 from markten.actions.__action import markten_action
 
