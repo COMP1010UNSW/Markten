@@ -59,6 +59,11 @@ dev = [
     "pytest-asyncio>=1.2.0",
 ]
 
+[tool.uv]
+# Exclude dependency releases newer than 1 week, in order to reduce supply-chain
+# risk.
+exclude-newer = "1 week"
+
 [build-system]
 requires = ["uv_build>=0.7.20,<0.12.0"]
 build-backend = "uv_build"
