@@ -6,7 +6,7 @@ Markten is an automation framework aimed at reducing the pain of marking
 student assignments in bulk. By writing a simple recipe, you can define the
 steps you take to mark an assignment, which can be anything from fetching
 submissions, compiling their code, viewing their codebase in an IDE, or running
-a test suite. It's all done with simple readable Python, with enough power
+a test suite. It's all done with simple, readable Python, with enough power
 under the hood to make even the most annoying workflows trivial.
 
 ## Installing
