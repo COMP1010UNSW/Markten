@@ -8,7 +8,6 @@ import asyncio
 import logging
 from pathlib import Path
 
-from markten import MarktenAction
 from markten.__action_session import ActionSession
 from markten.__utils import link_file, unlink_file
 from markten.actions import process
@@ -34,7 +33,7 @@ def code_alike(executable_name: str):
         snippets: Path | None = None,
     ):
         """
-        Launch a new VS Code window with the given paths.
+        Launch a new Code window with the given paths.
 
         Parameters
         ----------
@@ -43,14 +42,14 @@ def code_alike(executable_name: str):
         paths : Path
             Paths to open in VS Code.
         remove_history : bool
-            Whether to prevent the opened locations from being added to VS Code's
-            history. Defaults to `False`.
+            Whether to prevent the opened locations from being added to VS
+            Code's history. Defaults to `False`.
         snippets : Path
             Paths to a VS Code snippets file. It will be copied to the project
             directory while VS Code is open, and deleted once it exits. The
-            snippets file must be a global snippet file (ie not language-specifics)
-            such that it can be configured to not conflict with existing snippet
-            files.
+            snippets file must be a global snippet file (ie not
+            language-specifics) such that it can be configured to not conflict
+            with existing snippet files.
             https://code.visualstudio.com/docs/editing/userdefinedsnippets#_project-snippet-scope
         """
         # If there is a snippet file, copy it to the given path
@@ -86,8 +85,8 @@ def code_alike(executable_name: str):
         )
 
         # After VS Code exits, we may need to remove the snippet
-        # This is not a teardown step, since we don't want to accidentally commit
-        # it
+        # This is not a teardown step, since we don't want to accidentally 
+        # commit it
         async with asyncio.TaskGroup() as tg:
             for snip in snippet_targets:
                 _ = tg.create_task(unlink_file(snip))
