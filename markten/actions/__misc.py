@@ -8,8 +8,8 @@ import sys
 from pathlib import Path
 
 from markten import ActionSession
-from markten.actions import process
 from markten.actions.__action import markten_action
+from markten.actions.process import run as process_run
 
 
 @markten_action
@@ -59,4 +59,4 @@ async def open(action: ActionSession, file_or_url: str | Path) -> None:
                 f"Platform '{sys.platform}' is unsupported"
             )
 
-    await process.run(action, program, str(file_or_url))
+    _ = await process_run(action, program, str(file_or_url))

@@ -17,11 +17,10 @@ from typing_extensions import deprecated
 
 from markten import ActionSession
 from markten.__utils import TextCollector
-from markten.actions import fs
 from markten.actions.__action import markten_action
+from markten.actions.__fs import temp_dir
 
 log = Logger(__name__)
-
 
 
 async def read_stream(
@@ -70,7 +69,6 @@ async def run_process(
         if on_stderr:
             tg.create_task(read_stream(process.stderr, on_stderr))
     return await process.wait()
-
 
 
 @markten_action
@@ -183,7 +181,7 @@ async def run_in_background(
     tuple[Path, Path]
         File paths for stdout and stderr of subprocess.
     """
-    temp = await fs.temp_dir(action.make_child(fs.temp_dir))
+    temp = await temp_dir(action.make_child(temp_dir))
 
     stdout = temp / "stdout"
     stderr = temp / "stderr"
@@ -250,7 +248,7 @@ async def run_detached(
     tuple[Path, Path]
         File paths for stdout and stderr of subprocess.
     """
-    temp = await fs.temp_dir(action.make_child(fs.temp_dir))
+    temp = await temp_dir(action.make_child(temp_dir))
 
     stdout = temp / "stdout"
     stderr = temp / "stderr"

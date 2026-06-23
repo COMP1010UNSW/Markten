@@ -7,11 +7,13 @@ Code for managing the VS Code text editor.
 import asyncio
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING, cast
 
 from markten.__action_session import ActionSession
 from markten.__utils import link_file, unlink_file
 from markten.actions import process
 from markten.actions.__action import markten_action
+from markten.actions.editor.__interface import TextEditorAction
 
 log = logging.getLogger(__name__)
 
@@ -39,7 +41,7 @@ def code_alike(executable_name: str):
         ----------
         action : ActionSession
             Action session
-        paths : Path
+        paths : *Path
             Paths to open in VS Code.
         remove_history : bool
             Whether to prevent the opened locations from being added to VS
@@ -85,16 +87,25 @@ def code_alike(executable_name: str):
         )
 
         # After VS Code exits, we may need to remove the snippet
-        # This is not a teardown step, since we don't want to accidentally 
+        # This is not a teardown step, since we don't want to accidentally
         # commit it
         async with asyncio.TaskGroup() as tg:
             for snip in snippet_targets:
                 _ = tg.create_task(unlink_file(snip))
-
-        return action
 
     return code
 
 
 vs_code = code_alike("code")
 vs_codium = code_alike("codium")
+
+
+if TYPE_CHECKING:
+    validate_calling_behaviour: TextEditorAction = cast(
+        TextEditorAction, vs_code
+    )
+    _ = validate_calling_behaviour(ActionSession(""), Path("foo"), Path("foo"))
+
+    # Basedpyright is not happy with this, but mypy is. It seems correct from
+    # my checking.
+    validate_type_compatibility: TextEditorAction = vs_code
