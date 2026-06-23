@@ -31,5 +31,6 @@ class TextEditorAction(Protocol):
     def __call__(
         self,
         action: ActionSession,
+        /,
         *paths: Path,
     ) -> Awaitable[None]: ...

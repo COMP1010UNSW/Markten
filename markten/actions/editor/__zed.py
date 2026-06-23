@@ -17,7 +17,7 @@ from markten.actions.editor.__interface import TextEditorAction
 async def zed(
     action: ActionSession,
     *paths: Path,
-):
+) -> None:
     """
     Launch a new Zed window with the given Paths.
     """
