@@ -77,11 +77,11 @@ async def clone(
     Parameters
     ----------
     action : ActionSession
-        Markten action
+        Markten action.
     repo_url : str
-        URL to clone
+        URL to clone.
     branch : str | None, optional
-        Branch to checkout after cloning is complete, by default None
+        Branch to checkout after cloning is complete, by default None.
     fallback_to_main : bool, optional
         Whether to fall back to the main branch if the given `branch` does
         not exist, by default False, meaning that the action will fail if the
@@ -301,7 +301,7 @@ async def add(
         List of files to add, by default None, indicating that no files
         should be added.
     all : bool, optional
-        whether to add all modified files, including untracked files, by
+        Whether to add all modified files, including untracked files, by
         default False.
 
     Raises
@@ -346,6 +346,7 @@ async def commit(
     push_after: bool = False,
     push_upstream: bool | str | tuple[str, str] = False,
     push_options: list[str] | None = None,
+    skip_unchanged: bool = False,
 ) -> None:
     """Perform a `git commit` operation.
 
@@ -357,6 +358,8 @@ async def commit(
         Path to git repository
     message : str
         Commit message
+    files : list[Path], optional
+        Files to `git add` before committing.
     all : bool, optional
         Whether to commit all changes. This will not commit untracked files.
         Defaults to `False.
@@ -371,6 +374,10 @@ async def commit(
         Defaults to False.
     push_options : dict[str, str | True], optional
         Push options. Requires `push_after=True`. Defaults to `None`.
+    skip_unchanged : bool, optional
+        Whether to perform no action if there are no current changes in the 
+        repository.
+        Defaults to false.
     """
     additional_flags: list[str] = []
     if all:
@@ -378,6 +385,21 @@ async def commit(
 
     if files is not None or untracked:
         await add(action.make_child(add), dir, files, all=untracked)
+
+    if skip_unchanged and not len(
+        (
+            await stdout_of(
+                action.make_child("git status"),
+                "git",
+                "-C",
+                str(dir),
+                "status",
+                "--porcelain",
+            )
+        ).strip()
+    ):
+        action.succeed("No changes made")
+        return
 
     _ = await process.run(
         action,
