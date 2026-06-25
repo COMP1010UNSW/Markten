@@ -9,13 +9,14 @@ import inspect
 import os
 import traceback
 from collections.abc import Iterable, Mapping
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, ParamSpec, TypeVar, overload
 
 import humanize
-from rich import print
+import rich
 
 from markten import __utils as utils
+from markten.__consts import INTERRUPT_SPEED
 from markten.__context import get_context
 from markten.__recipe.parameters import ParameterManager
 from markten.__recipe.runner import RecipeRunner
@@ -25,10 +26,19 @@ from markten.actions.__action import MarktenAction
 P = ParamSpec("P")
 T = TypeVar("T")
 
-DEFAULT_VERBOSITY = int(os.getenv("MARKTEN_VERBOSITY", "0"))
+
+console = rich.get_console()
 
 
 class Recipe:
+    """
+    Markten Recipe
+
+    A recipe is the framework for building a Markten script. After creating
+    the recipe, you can add parameters and steps to it, in order to specify
+    how to execute the task.
+    """
+
     def __init__(
         self,
         recipe_name: str,
@@ -57,7 +67,7 @@ class Recipe:
         self.__name = recipe_name
         self.__params = ParameterManager()
         self.__steps: list[RecipeStep] = []
-        self.__verbose = verbose
+        self.__verbose = max(get_context().verbosity, verbose or 0)
 
     def parameter(self, name: str, values: Iterable[Any]) -> None:
         """Add a single parameter to the recipe.
@@ -149,19 +159,7 @@ class Recipe:
         This begins the `asyncio` event loop, and so cannot be called from
         async code.
         """
-        try:
-            asyncio.run(self.async_run())
-        except KeyboardInterrupt as e:
-            print()
-            print("[bold red]Interrupted[/]")
-            if (self.__verbose or get_context().verbosity) >= 1:
-                traceback.print_exception(e)
-            else:
-                print(
-                    "To show stack trace, set recipe verbosity to a value >= 1"
-                )
-            print("Goodbye!")
-            exit(1)
+        asyncio.run(self.async_run())
 
     async def async_run(self):
         """Run the marking recipe for each permutation given by the generators.
@@ -171,10 +169,56 @@ class Recipe:
         utils.recipe_banner(self.__name, self.__file)
         recipe_start = datetime.now()
 
+        last_interrupt: datetime | None = None
+
         # For each permutation of parameters, run the recipe
-        for permutation in self.__params:
-            runner = RecipeRunner(permutation, self.__steps)
-            await runner.run()
+
+        # Annoyingly, when an iterable throws an exception, its
+        # iterator cannot be resumed. As such, this results in
+        # immediate termination of the recipe, even if we were to manually
+        # handle iteration using the `iter` and `next` functions, then handle
+        # the exception within the loop. In the future, it could be possible to
+        # instead handle when an iterator yields an object which
+        # `isinstance(o, Exception)` like what is mentioned in
+        # https://stackoverflow.com/a/27924011/6335363 's answers.
+        # This would mean that the traceback information wouldn't be
+        # available for debugging purposes though, so it is ***FAR***
+        # from ideal.
+        try:
+            for permutation in self.__params:
+                runner = RecipeRunner(permutation, self.__steps)
+                try:
+                    # The runner will gracefully handle its own errors.
+                    await runner.run()
+                except asyncio.CancelledError:
+                    utils.print_exception(
+                        "Interrupted while running recipe permutation.",
+                        self.__verbose,
+                    )
+                    # If this is the second recipe to be interrupted in a short
+                    # timespan, we should stop entirely.
+                    if (
+                        last_interrupt is not None
+                        and datetime.now() - last_interrupt < INTERRUPT_SPEED
+                    ):
+                        print("Exiting due to repeated interruptions.")
+                        break
+                    else:
+                        print("Interrupt repeatedly to quit.")
+                        print()
+                        last_interrupt = datetime.now()
+        except KeyboardInterrupt:
+            utils.print_exception(
+                "Interrupted while evaluating recipe parameters.",
+                self.__verbose,
+            )
+            return
+        except Exception:
+            utils.print_exception(
+                "Error while evaluating recipe parameters:",
+                self.__verbose,
+            )
+            return
 
         duration = datetime.now() - recipe_start
         iter_str = humanize.precisedelta(duration, minimum_unit="seconds")

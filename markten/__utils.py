@@ -10,11 +10,13 @@ import shutil
 from pathlib import Path
 from types import FunctionType
 
-from rich.console import Console
+import rich
 from rich.panel import Panel
 from typing_extensions import override
 
 from . import __consts as consts
+
+console = rich.get_console()
 
 
 def relativize_file(file: Path, to: Path | None = None) -> Path:
@@ -64,7 +66,7 @@ def recipe_banner(
     recipe_file : str | None
         File of recipe
     """
-    console = Console()
+    console = rich.get_console()
 
     text: list[str] = []
     if recipe_name:
@@ -118,3 +120,54 @@ def friendly_name(obj: object) -> str:
             return f"{mod}.{name}"
     else:
         return str(obj)
+
+
+def default_traceback_suppressions():
+    """A list of modules to suppress by default when displaying tracebacks."""
+    import asyncio
+    import selectors
+
+    import rich
+
+    from . import __main__, __recipe
+
+    return [
+        __main__,
+        __recipe,
+        asyncio,
+        selectors,
+        rich,
+    ]
+
+
+def print_exception(title: str, verbosity: int):
+    """
+    Print the active exception. Due to Python weirdness, this is determined by
+    inspecting stack frames, instead of using a local variable, which is weird.
+    """
+    console.print()
+    console.print(f"[bold red]{title}[/]")
+    if verbosity >= 1:
+        show_locals = verbosity >= 2
+        # If verbosity is set extremely high, don't suppress any parts of
+        # the traceback.
+        show_full_traceback = verbosity >= 3
+
+        console.print_exception(
+            show_locals=show_locals,
+            suppress=(
+                [] if show_full_traceback else default_traceback_suppressions()
+            ),
+        )
+        if not show_locals:
+            console.print(
+                "To show local variables, set recipe verbosity to a value >= 2"
+            )
+        if not show_full_traceback:
+            console.print(
+                "To show full traceback, set recipe verbosity to a value >= 3"
+            )
+    else:
+        console.print(
+            "To show stack trace, set recipe verbosity to a value >= 1"
+        )

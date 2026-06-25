@@ -8,14 +8,15 @@ import runpy
 import sys
 
 import click
-from rich.console import Console
+import rich
 from rich.panel import Panel
 
 from markten.__context import get_context
 
 from . import __consts as consts
+from . import __utils as utils
 
-console = Console()
+console = rich.get_console()
 
 title = f"Markten - v{consts.VERSION}"
 
@@ -62,16 +63,16 @@ def show_help(ctx: click.Context, param: click.Option, value: bool):
 @click.argument("args", nargs=-1)
 @click.version_option(consts.VERSION)
 def main(recipe: str, args: tuple[str, ...], verbose: int = 0):
-    console = Console()
     # Set verbosity
     get_context().verbosity = verbose
     # replace argv
     sys.argv = [sys.argv[0], *args]
     try:
         # Then run code as main
-        runpy.run_path(recipe, {}, "__main__")
-    except Exception:
-        console.print_exception()
+        _ = runpy.run_path(recipe, {}, "__main__")
+    except Exception as e:
+        utils.print_exception(str(e), get_context().verbosity)
+        exit(1)
 
 
 if __name__ == "__main__":

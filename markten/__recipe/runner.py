@@ -10,12 +10,13 @@ from datetime import datetime
 from typing import Any
 
 import humanize
+import rich
 from rich.console import Console
 
 from markten.__action_session import TeardownHook
 from markten.__recipe.step import RecipeStep
 
-console = Console()
+console = rich.get_console()
 
 
 class RecipeRunner:
