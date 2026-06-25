@@ -13,6 +13,7 @@ from rich.live import Live
 from markten.__action_session import ActionSession, TeardownHook
 from markten.__cli import CliManager
 from markten.__consts import TIME_PER_CLI_FRAME
+from markten.__recipe.hook import exec_hook
 from markten.actions.__action import MarktenAction, ResultType
 
 P = ParamSpec("P")
@@ -99,6 +100,11 @@ class RecipeStep:
             await spinner_task
 
             if len(task_errors):
+                # Run registered teardown hooks for this step if an error
+                # occurred
+                for teardown_hook in session.get_teardown_hooks():
+                    await exec_hook(teardown_hook)
+
                 raise ExceptionGroup(
                     f"Task failed on step {self.__index + 1}",
                     task_errors,
@@ -151,8 +157,10 @@ async def call_action_with_context(
         if not action.is_resolved():
             action.succeed()
         return ret
-    except:
-        action.fail()
+    except BaseException as e:
+        action.fail(e)
+        for abort_hook in action.get_abort_hooks():
+            await exec_hook(abort_hook, e)
         raise
 
 

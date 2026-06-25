@@ -5,15 +5,14 @@ Runner for a single permutation of a recipe.
 """
 
 import traceback
-from collections.abc import Awaitable
 from datetime import datetime
 from typing import Any
 
 import humanize
 import rich
-from rich.console import Console
 
 from markten.__action_session import TeardownHook
+from markten.__recipe.hook import exec_hook
 from markten.__recipe.step import RecipeStep
 
 console = rich.get_console()
@@ -51,20 +50,17 @@ class RecipeRunner:
         context: dict[str, Any] = {}
         teardown: list[list[TeardownHook]] = []
 
-        for step in self.__steps:
-            context, teardown_hooks = await step.run(self.__params, context)
-            teardown.append(teardown_hooks)
-
-        # Now do clean-up in reverse order
-        for teardown_step in reversed(teardown):
-            for hook in teardown_step:
-                await RecipeRunner.__exec_teardown_hook(hook)
-
-    @staticmethod
-    async def __exec_teardown_hook(hook: TeardownHook) -> None:
-        value = hook()
-        if isinstance(value, Awaitable):
-            await value
+        try:
+            for step in self.__steps:
+                context, teardown_hooks = await step.run(
+                    self.__params, context
+                )
+                teardown.append(teardown_hooks)
+        finally:
+            # Now do clean-up in reverse order
+            for teardown_step in reversed(teardown):
+                for teardown_hook in teardown_step:
+                    await exec_hook(teardown_hook)
 
     def __show_current_params(self):
         """

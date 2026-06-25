@@ -2,7 +2,6 @@
 # Markten / consts
 """
 
-import os
 from datetime import timedelta
 from importlib.metadata import version
 

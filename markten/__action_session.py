@@ -15,9 +15,15 @@ from markten.__utils import friendly_name
 TeardownHook = Callable[[], Awaitable[None] | None]
 """Callback function for cleaning up after an action has completed."""
 
+AbortHook = Callable[[BaseException], Awaitable[None] | None]
+"""
+Callback function for when a recipe was aborted, either due to an error or due
+to being interrupted (eg KeyboardInterrupt).
+"""
 
-P = ParamSpec('P')
-T = TypeVar('T')
+
+P = ParamSpec("P")
+T = TypeVar("T")
 
 
 class ActionStatus(Enum):
@@ -37,13 +43,12 @@ class ActionInfo:
     status: ActionStatus
     message: str | None
     progress: float | None
-    children: list['ActionInfo']
+    children: list["ActionInfo"]
     output: list[str]
     verbose: bool
 
 
 class ActionSession:
-
     def __init__(self, name: str | object) -> None:
         """Create an ActionSession object.
 
@@ -74,6 +79,8 @@ class ActionSession:
 
         self.__teardown_hooks: list[TeardownHook] = []
 
+        self.__abort_hooks: list[AbortHook] = []
+
         self.__verbose = False
         """Whether task should always show full output regardless of status"""
 
@@ -95,9 +102,9 @@ class ActionSession:
         """Returns all registered teardown hooks, both for this hook, and for
         all its children.
 
-        This list of hooks should be returned by a `RecipeStep` once it
-        finishes executing. It does not need to be manually run by a Markten
-        action.
+        This list of hooks should be returned by a `RecipeStep` once the full
+        recipe finishes executing. It does not need to be manually run by a
+        Markten action.
 
         The hooks are returned in the order in which they should be executed
         (ie reverse order of creation).
@@ -107,15 +114,50 @@ class ActionSession:
         list[TeardownHook]
             List of teardown hooks.
         """
-        hooks = []
+        hooks: list[TeardownHook] = []
         for child in reversed(self.__children):
             hooks.extend(child.get_teardown_hooks())
         hooks.extend(reversed(self.__teardown_hooks))
         return hooks
 
+    def add_abort_hook(self, hook: AbortHook):
+        """Register an abort hook. This will be called if a
+
+        This function can be either synchronous or asynchronous. If it is
+        async, its return will be awaited before running earlier hooks.
+
+        Parameters
+        ----------
+        hook : AbortHook
+            Hook callback function.
+        """
+        self.__abort_hooks.append(hook)
+
+    def get_abort_hooks(self) -> list[AbortHook]:
+        """Returns all registered abort hooks, both for this hook, and for
+        all its children.
+
+        This list of hooks should be returned by a `RecipeStep` once it
+        finishes executing. It does not need to be manually run by a Markten
+        action.
+
+        The hooks are returned in the order in which they should be executed
+        (ie reverse order of creation).
+
+        Returns
+        -------
+        list[AbortHook]
+            List of abort hooks.
+        """
+        hooks: list[AbortHook] = []
+        for child in reversed(self.__children):
+            hooks.extend(child.get_abort_hooks())
+        hooks.extend(reversed(self.__abort_hooks))
+        return hooks
+
     def child(
         self,
-        action: Callable[Concatenate['ActionSession', P], T],
+        action: Callable[Concatenate["ActionSession", P], T],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> T:
@@ -137,7 +179,7 @@ class ActionSession:
         child_session = self.make_child(action)
         return action(child_session, *args, **kwargs)
 
-    def make_child(self, name: str | object) -> 'ActionSession':
+    def make_child(self, name: str | object) -> "ActionSession":
         """Create a child action of this action.
 
         It's probably simpler to use `ActionSession.child` to create and
@@ -191,6 +233,7 @@ class ActionSession:
         If set to `None`, indicates progress is not being measured (a spinner
         will be shown rather than a progress bar).
         """
+        # TODO
 
     def message(self, msg: str | None) -> None:
         """
@@ -222,13 +265,19 @@ class ActionSession:
         self.__status = ActionStatus.Success
         self.message(msg)
 
-    def fail(self, msg: str | None = None) -> None:
+    def fail(self, msg: str | BaseException | None = None) -> None:
         """
         Set the action status as `Failure`.
 
         Optionally, a status message can be provided.
+
+        Note that this does not immediately abort the action. As such, it may
+        be preferred to raise an exception, which will automatically fail the
+        action.
         """
         self.__status = ActionStatus.Failure
+        if isinstance(msg, BaseException):
+            msg = str(msg)
         self.message(msg)
 
     def is_resolved(self) -> bool:
