@@ -1,7 +1,7 @@
 """
-# Markten / Actions / editor / zed
+# Markten / Actions / editor / pulsar
 
-Action for launching the Zed text editor.
+Code for launching the Pulsar text editor.
 """
 
 from pathlib import Path
@@ -14,27 +14,29 @@ from markten.actions.editor.__interface import TextEditorAction
 
 
 @markten_action
-async def zed(
+async def pulsar(
     action: ActionSession,
     *paths: Path,
 ) -> None:
     """
-    Launch a new Zed window with the given Paths.
+    Launch a new Pulsar window with the given Paths.
     """
     # -n = new window
     # -w = CLI waits for window exit
     _ = await process.run(
         action.make_child(process.run),
-        "zed",
+        "pulsar",
         "-nw",
         *[str(p) for p in paths],
     )
 
 
 if TYPE_CHECKING:
-    validate_calling_behaviour: TextEditorAction = cast(TextEditorAction, zed)
+    validate_calling_behaviour: TextEditorAction = cast(
+        TextEditorAction, pulsar
+    )
     _ = validate_calling_behaviour(ActionSession(""), Path("foo"), Path("foo"))
 
     # Basedpyright is not happy with this, but mypy is. It seems correct from
     # my checking.
-    validate_type_compatibility: TextEditorAction = zed
+    validate_type_compatibility: TextEditorAction = pulsar
