@@ -11,34 +11,22 @@ under the hood to make even the most annoying workflows trivial.
 
 ## Installing
 
+You can install globally using your preferred tool:
+
 ```bash
+# Any of
 $ pip install markten
-...
-Successfully installed markten-1.0.0
+$ pipx install markten
+$ uv tool install markten
+$ mise install -g pipx:markten
 ```
 
-Or to install in an independent environment, you can use `pipx` or `uv`:
+If you are using it for a specific project, you should add it to that project's
+Python environment:
 
 ```bash
-$ pipx install markten
-  installed package markten 1.0.0, installed using Python 3.12.6
-  These apps are now globally available
-    - markten
-done! ✨ 🌟 ✨
-$ uv tool install markten
-Resolved 10 packages in 2ms
-Installed 10 packages in 11ms
- + aiosqlite==0.21.0
- + click==8.2.1
- + humanize==4.12.3
- + markdown-it-py==3.0.0
- + markten==1.0.0
- + mdurl==0.1.2
- + platformdirs==4.3.8
- + pygments==2.19.1
- + rich==13.9.4
- + typing-extensions==4.14.0
-Installed 1 executable: markten
+$ uv add markten
+# Or use any other Python project manager
 ```
 
 ## Running recipes
