@@ -44,7 +44,7 @@ async def temp_dir(action: ActionSession, remove: bool = False) -> Path:
 
     async def teardown():
         loop = asyncio.get_event_loop()
-        loop.run_in_executor(None, lambda: shutil.rmtree(file_path))
+        await loop.run_in_executor(None, lambda: shutil.rmtree(file_path))
 
     if remove:
         action.add_teardown_hook(teardown)
@@ -60,6 +60,7 @@ async def write_file(
     text: str,
     /,
     overwrite: bool = False,
+    skip_existing: bool = False,
 ) -> None:
     """Write the given text into the given file.
 
@@ -75,20 +76,27 @@ async def write_file(
     text : str
         Text to write
     overwrite : bool, optional
-        Whether to overwrite the file if it already exists, by default False
+        Whether to overwrite the file if it already exists, by default False.
+    skip_existing : bool, optional
+        Whether to skip writing the file if it already exists. Defaults to
+        False.
 
     Raises
     ------
     FileExistsError
-        File already exists.
+        File already exists, if `overwrite` or `skip_existing` is not set.
     """
-    if await aiofiles.ospath.exists(file) and not overwrite:
-        raise FileExistsError(
-            f"Cannot write into '{file}' as it already exists"
-        )
-    action.message(f"Writing {file}")
+    if await aiofiles.ospath.exists(file):
+        if skip_existing:
+            action.succeed("Skipping writing to already-existing file")
+            return
+        elif not overwrite:
+            raise FileExistsError(
+                f"Cannot write into '{file}' as it already exists"
+            )
+    action.message(f"Write {file}")
     async with aiofiles.open(file, "w") as f:
-        await f.write(text)
+        _ = await f.write(text)
 
 
 @markten_action

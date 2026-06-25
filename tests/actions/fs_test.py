@@ -32,6 +32,20 @@ async def test_cannot_overwrite_file():
 
 
 @pytest.mark.asyncio
+async def test_skip_existing_file():
+    action = ActionSession("test")
+    dir = await fs.temp_dir(action)
+
+    await fs.write_file(action, dir / "file", "Some text")
+
+    await fs.write_file(
+        action, dir / "file", "Some other text", skip_existing=True
+    )
+
+    assert await fs.read_file(action, dir / "file") == "Some text"
+
+
+@pytest.mark.asyncio
 async def test_force_overwrite_file():
     action = ActionSession("test")
     dir = await fs.temp_dir(action)
