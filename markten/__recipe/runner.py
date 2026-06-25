@@ -4,14 +4,15 @@
 Runner for a single permutation of a recipe.
 """
 
-import traceback
 from datetime import datetime
 from typing import Any
 
 import humanize
 import rich
 
+from markten import __utils as utils
 from markten.__action_session import TeardownHook
+from markten.__context import get_context
 from markten.__recipe.hook import exec_hook
 from markten.__recipe.step import RecipeStep
 
@@ -33,12 +34,11 @@ class RecipeRunner:
 
         try:
             await self.__do_run()
-        except Exception as e:
-            console.print(
-                "[red]Error while running this permutation of recipe[/]"
+        except Exception:
+            utils.print_exception(
+                "Error while running this permutation of recipe",
+                get_context().verbosity,
             )
-            # TODO: Better error handling (pretty-print exceptions)
-            traceback.print_exception(e)
 
         duration = datetime.now() - start
         perm_str = humanize.precisedelta(duration, minimum_unit="seconds")
