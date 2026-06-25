@@ -15,7 +15,6 @@ You can install globally using your preferred tool:
 
 ```bash
 # Any of
-$ pip install markten
 $ pipx install markten
 $ uv tool install markten
 $ mise install -g pipx:markten
